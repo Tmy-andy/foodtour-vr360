@@ -29,20 +29,27 @@
 <body>
     <!-- Header -->
     <header class="header">
+        <!-- Logo Sở Du lịch HCM - bên trái -->
         <div class="header__logo">
-            <img src="assets/icons/lantern.png" alt="Đèn lồng" class="header__icon">
-            <h1 class="header__title">Hẻm Sài Gòn</h1>
+            <img src="assets/logo/logo.png" alt="Sở Du lịch TP.HCM" class="header__tourism-logo">
         </div>
-        <div class="header__search">
-            <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm quán ăn, cafe...">
-            <button class="search-btn" id="search-btn">
-                <i data-lucide="search"></i>
+        
+        <!-- Title - giữa -->
+        <h1 class="header__title">HẺM SÀI GÒN</h1>
+        
+        <!-- Search và Theme toggle - bên phải -->
+        <div class="header__controls">
+            <div class="header__search">
+                <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm quán ăn, cafe...">
+                <button class="search-btn" id="search-btn">
+                    <i data-lucide="search"></i>
+                </button>
+            </div>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Chuyển đổi giao diện" title="Chuyển đổi sáng/tối">
+                <img src="assets/icons/moon.png" alt="Dark mode" class="theme-toggle__icon theme-toggle__icon--dark">
+                <img src="assets/icons/sun.png" alt="Light mode" class="theme-toggle__icon theme-toggle__icon--light">
             </button>
         </div>
-        <button class="theme-toggle" id="theme-toggle" aria-label="Chuyển đổi giao diện" title="Chuyển đổi sáng/tối">
-            <img src="assets/icons/moon.png" alt="Dark mode" class="theme-toggle__icon theme-toggle__icon--dark">
-            <img src="assets/icons/sun.png" alt="Light mode" class="theme-toggle__icon theme-toggle__icon--light">
-        </button>
     </header>
 
     <!-- Main Container -->
