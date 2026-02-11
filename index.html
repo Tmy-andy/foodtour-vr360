@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản Đồ Du Lịch Ngõ Hẻm TP.HCM</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Pannellum CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header__logo">
+            <span class="header__icon">🏮</span>
+            <h1 class="header__title">Hẻm Sài Gòn</h1>
+        </div>
+        <div class="header__search">
+            <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm quán ăn, cafe...">
+            <button class="search-btn" id="search-btn">🔍</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-category="all">Tất cả</button>
+                <button class="filter-tab" data-category="food">🍜 Ẩm thực</button>
+                <button class="filter-tab" data-category="cafe">☕ Cafe</button>
+                <button class="filter-tab" data-category="art">🎨 Nghệ thuật</button>
+                <button class="filter-tab" data-category="hotel">🏨 Lưu trú</button>
+            </div>
+            
+            <!-- POI List -->
+            <div class="poi-list" id="poi-list">
+                <!-- POI cards will be rendered here by JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="map-wrapper">
+            <div id="map-container" class="map-container"></div>
+        </main>
+    </div>
+
+    <!-- Panorama Overlay -->
+    <div id="panorama-overlay" class="panorama-overlay hidden">
+        <div id="panorama-loading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Đang tải panorama...</p>
+        </div>
+        <button id="panorama-close" class="panorama-close-btn" aria-label="Đóng panorama">✕</button>
+        <div id="panorama-container" class="panorama-container"></div>
+        
+        <!-- Scene Info -->
+        <div id="scene-info" class="scene-info">
+            <span id="scene-name"></span>
+        </div>
+    </div>
+
+    <!-- POI Modal -->
+    <div id="poi-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close" aria-label="Đóng">✕</button>
+            <img id="modal-image" class="modal-card__image" src="" alt="">
+            <div class="modal-card__body">
+                <span id="modal-category" class="modal-card__category"></span>
+                <h2 id="modal-name" class="modal-card__name"></h2>
+                <p id="modal-alley" class="modal-card__alley"></p>
+                <div id="modal-rating" class="modal-card__rating"></div>
+                <p id="modal-description" class="modal-card__description"></p>
+                <p id="modal-hours" class="modal-card__hours">
+                    <span class="hours-icon">🕐</span>
+                    <span id="modal-hours-text"></span>
+                </p>
+                <a id="modal-cta" class="modal-card__cta" href="#" target="_blank" rel="noopener noreferrer">
+                    Xem Website 360 →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Pannellum JS -->
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    
+    <!-- App Modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
