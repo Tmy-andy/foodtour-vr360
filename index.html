@@ -34,8 +34,19 @@
 
     <!-- Main Container -->
     <div class="main-container">
+        <!-- Mobile Toggle Button (hidden by default, shown when sidebar is collapsed) -->
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Mở danh sách">
+            <span class="sidebar-toggle__icon">📋</span>
+            <span class="sidebar-toggle__text">Danh sách</span>
+        </button>
+
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
+            <!-- Drag Handle for mobile -->
+            <div class="sidebar__drag-handle" id="sidebar-drag-handle">
+                <span class="drag-bar"></span>
+            </div>
+            
             <!-- Filter Tabs -->
             <div class="filter-tabs">
                 <button class="filter-tab active" data-category="all">Tất cả</button>

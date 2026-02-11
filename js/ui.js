@@ -51,6 +51,9 @@ export function initUI() {
     // Setup modal
     setupModal(elements);
     
+    // Setup mobile sidebar (drag & toggle)
+    setupMobileSidebar();
+    
     // Subscribe to state changes
     subscribeToState();
     
@@ -392,4 +395,155 @@ function subscribeToState() {
     subscribe('currentPOI', (poi) => {
         highlightPOICard(poi?.id);
     });
+}
+
+// ===========================================
+// MOBILE SIDEBAR - Drag & Toggle
+// ===========================================
+
+/**
+ * Setup mobile sidebar với khả năng kéo lên/xuống
+ */
+function setupMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const dragHandle = document.getElementById('sidebar-drag-handle');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    
+    if (!sidebar || !dragHandle || !toggleBtn) return;
+    
+    // Check if mobile
+    const isMobile = () => window.innerWidth <= 768;
+    
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+    
+    // Sidebar states: 'collapsed', 'half', 'expanded'
+    let currentState = 'half';
+    
+    /**
+     * Set sidebar state
+     */
+    function setSidebarState(state) {
+        currentState = state;
+        sidebar.classList.remove('sidebar--collapsed', 'sidebar--half', 'sidebar--expanded');
+        
+        switch (state) {
+            case 'collapsed':
+                sidebar.classList.add('sidebar--collapsed');
+                toggleBtn.classList.remove('hidden');
+                break;
+            case 'half':
+                sidebar.classList.add('sidebar--half');
+                toggleBtn.classList.add('hidden');
+                break;
+            case 'expanded':
+                sidebar.classList.add('sidebar--expanded');
+                toggleBtn.classList.add('hidden');
+                break;
+        }
+    }
+    
+    /**
+     * Handle drag start
+     */
+    function handleDragStart(e) {
+        if (!isMobile()) return;
+        
+        isDragging = true;
+        startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        startHeight = sidebar.offsetHeight;
+        
+        sidebar.style.transition = 'none';
+        document.body.style.userSelect = 'none';
+        document.body.style.touchAction = 'none';
+    }
+    
+    /**
+     * Handle drag move
+     */
+    function handleDragMove(e) {
+        if (!isDragging || !isMobile()) return;
+        
+        const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        const deltaY = startY - currentY;
+        const newHeight = Math.max(0, Math.min(startHeight + deltaY, window.innerHeight - 60));
+        
+        sidebar.style.height = `${newHeight}px`;
+    }
+    
+    /**
+     * Handle drag end
+     */
+    function handleDragEnd() {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        sidebar.style.transition = '';
+        sidebar.style.height = '';
+        document.body.style.userSelect = '';
+        document.body.style.touchAction = '';
+        
+        const currentHeight = sidebar.offsetHeight;
+        const windowHeight = window.innerHeight - 60;
+        const ratio = currentHeight / windowHeight;
+        
+        // Snap to state based on position
+        if (ratio < 0.25) {
+            setSidebarState('collapsed');
+        } else if (ratio < 0.65) {
+            setSidebarState('half');
+        } else {
+            setSidebarState('expanded');
+        }
+    }
+    
+    // Drag handle events
+    dragHandle.addEventListener('mousedown', handleDragStart);
+    dragHandle.addEventListener('touchstart', handleDragStart, { passive: true });
+    
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove, { passive: true });
+    
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
+    
+    // Toggle button click
+    toggleBtn.addEventListener('click', () => {
+        setSidebarState('half');
+    });
+    
+    // Double tap on drag handle to expand/collapse
+    let lastTap = 0;
+    dragHandle.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        if (tapLength < 300 && tapLength > 0) {
+            // Double tap detected
+            if (currentState === 'expanded') {
+                setSidebarState('half');
+            } else {
+                setSidebarState('expanded');
+            }
+            e.preventDefault();
+        }
+        lastTap = currentTime;
+    });
+    
+    // Initialize state
+    if (isMobile()) {
+        setSidebarState('half');
+    }
+    
+    // Handle resize
+    window.addEventListener('resize', debounce(() => {
+        if (!isMobile()) {
+            sidebar.classList.remove('sidebar--collapsed', 'sidebar--half', 'sidebar--expanded');
+            toggleBtn.classList.add('hidden');
+            sidebar.style.height = '';
+        } else {
+            setSidebarState(currentState);
+        }
+    }, 200));
 }

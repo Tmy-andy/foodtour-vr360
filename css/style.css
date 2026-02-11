@@ -881,6 +881,20 @@ img {
    =========================================== */
 
 /* ===========================================
+   SIDEBAR TOGGLE BUTTON (Mobile only)
+   =========================================== */
+.sidebar-toggle {
+    display: none;
+}
+
+/* ===========================================
+   SIDEBAR DRAG HANDLE (Mobile only)
+   =========================================== */
+.sidebar__drag-handle {
+    display: none;
+}
+
+/* ===========================================
    TABLET (768px - 1024px)
    =========================================== */
 @media (max-width: 1024px) {
@@ -898,7 +912,7 @@ img {
 }
 
 /* ===========================================
-   MOBILE LANDSCAPE & SMALL TABLET (max-width: 768px)
+   MOBILE (max-width: 768px)
    =========================================== */
 @media (max-width: 768px) {
     :root {
@@ -942,53 +956,121 @@ img {
         flex-shrink: 0;
     }
     
-    /* Main Layout - Stack vertically */
+    /* Main Layout */
     .main-container {
         flex-direction: column;
-    }
-    
-    /* Map takes more space on mobile */
-    .map-wrapper {
-        height: 55%;
-        order: 1;
-        min-height: 250px;
-    }
-    
-    /* Sidebar as bottom sheet */
-    .sidebar {
-        width: 100%;
-        height: 45%;
-        order: 2;
-        border-right: none;
-        border-top: 2px solid var(--color-magenta);
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        margin-top: -var(--radius-lg);
         position: relative;
-        z-index: 20;
     }
     
-    /* Drag handle indicator */
-    .sidebar::before {
-        content: '';
+    /* Map takes full space, sidebar overlays */
+    .map-wrapper {
         position: absolute;
-        top: 8px;
+        inset: 0;
+        height: 100%;
+        z-index: 1;
+    }
+    
+    /* ========== SIDEBAR TOGGLE BUTTON ========== */
+    .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        position: absolute;
+        bottom: var(--space-md);
         left: 50%;
         transform: translateX(-50%);
-        width: 40px;
-        height: 4px;
-        background: var(--color-glass-strong);
+        z-index: 100;
+        padding: var(--space-sm) var(--space-lg);
+        background: linear-gradient(135deg, var(--color-magenta), var(--color-purple));
         border-radius: var(--radius-full);
+        color: white;
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 0, 110, 0.4);
+        transition: all var(--transition-normal);
     }
     
-    /* Filter tabs horizontal scroll */
+    .sidebar-toggle:active {
+        transform: translateX(-50%) scale(0.95);
+    }
+    
+    .sidebar-toggle__icon {
+        font-size: var(--font-size-lg);
+    }
+    
+    .sidebar-toggle.hidden {
+        display: none;
+    }
+    
+    /* ========== SIDEBAR AS BOTTOM SHEET ========== */
+    .sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 50%;
+        max-height: calc(100% - 60px);
+        z-index: 50;
+        border-right: none;
+        border-top: none;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        background: var(--color-darker);
+        box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s ease;
+        overflow: hidden;
+    }
+    
+    /* Sidebar states */
+    .sidebar.sidebar--collapsed {
+        transform: translateY(100%);
+    }
+    
+    .sidebar.sidebar--expanded {
+        height: calc(100% - 60px);
+    }
+    
+    .sidebar.sidebar--half {
+        height: 50%;
+    }
+    
+    /* Drag Handle */
+    .sidebar__drag-handle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+    }
+    
+    .sidebar__drag-handle:active {
+        cursor: grabbing;
+    }
+    
+    .drag-bar {
+        width: 40px;
+        height: 5px;
+        background: var(--color-glass-strong);
+        border-radius: var(--radius-full);
+        transition: background var(--transition-fast);
+    }
+    
+    .sidebar__drag-handle:hover .drag-bar,
+    .sidebar__drag-handle:active .drag-bar {
+        background: var(--color-magenta);
+    }
+    
+    /* Filter tabs */
     .filter-tabs {
-        padding: var(--space-md) var(--space-sm);
-        padding-top: var(--space-lg);
+        padding: var(--space-xs) var(--space-sm);
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
         gap: var(--space-xs);
+        border-bottom: 1px solid var(--color-glass-border);
     }
     
     .filter-tabs::-webkit-scrollbar {
@@ -1002,63 +1084,95 @@ img {
         white-space: nowrap;
     }
     
-    /* POI List horizontal scroll on mobile */
+    /* ========== POI LIST - 2 COLUMNS GRID ========== */
     .poi-list {
         padding: var(--space-sm);
         gap: var(--space-sm);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: min-content;
+        align-content: start;
     }
     
-    /* POI Card compact */
+    /* POI Card - Square style */
     .poi-card {
         display: flex;
-        flex-direction: row;
-        align-items: stretch;
+        flex-direction: column;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        height: auto;
+        min-height: 0;
     }
     
     .poi-card__image-wrapper {
-        width: 100px;
-        height: auto;
-        min-height: 90px;
+        width: 100%;
+        height: 0;
+        padding-bottom: 75%; /* 4:3 aspect ratio */
         flex-shrink: 0;
-        border-radius: var(--radius-md) 0 0 var(--radius-md);
+        border-radius: 0;
+        position: relative;
+        overflow: hidden;
     }
     
     .poi-card__image {
-        border-radius: var(--radius-md) 0 0 var(--radius-md);
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
     .poi-card__category-badge {
         top: var(--space-xs);
-        right: auto;
-        left: var(--space-xs);
+        right: var(--space-xs);
+        left: auto;
         font-size: var(--font-size-sm);
         padding: 2px var(--space-xs);
     }
     
     .poi-card__info {
-        padding: var(--space-sm);
+        padding: var(--space-xs);
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        overflow: hidden;
     }
     
     .poi-card__name {
-        font-size: var(--font-size-sm);
-        line-height: 1.3;
+        font-size: var(--font-size-xs);
+        line-height: 1.2;
         margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
     
     .poi-card__alley {
-        font-size: var(--font-size-xs);
-        margin-bottom: var(--space-xs);
+        font-size: 10px;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .alley-icon {
+        display: none;
+    }
+    
+    .poi-card__rating {
+        margin-top: var(--space-xxs);
     }
     
     .poi-card__rating .star {
-        font-size: var(--font-size-xs);
+        font-size: 10px;
     }
     
     .rating-number {
-        font-size: 10px;
+        font-size: 9px;
     }
     
     /* Panorama Mobile */
@@ -1124,7 +1238,7 @@ img {
         right: var(--space-sm);
     }
     
-    /* Navigation Arrows Mobile - Bigger touch targets */
+    /* Navigation Arrows Mobile */
     .nav-arrow-inner svg {
         width: 60px;
         height: 60px;
@@ -1135,7 +1249,7 @@ img {
         padding: var(--space-xs) var(--space-md);
     }
     
-    /* POI Hotspot Mobile - Bigger touch targets */
+    /* POI Hotspot Mobile */
     .poi-hotspot-pin {
         width: 32px;
         height: 32px;
@@ -1144,7 +1258,7 @@ img {
 }
 
 /* ===========================================
-   MOBILE PORTRAIT (max-width: 480px)
+   MOBILE SMALL (max-width: 480px)
    =========================================== */
 @media (max-width: 480px) {
     :root {
@@ -1171,47 +1285,14 @@ img {
         font-size: var(--font-size-sm);
     }
     
-    /* Adjust map/sidebar ratio */
-    .map-wrapper {
-        height: 50%;
-        min-height: 200px;
-    }
-    
-    .sidebar {
-        height: 50%;
-    }
-    
-    .filter-tabs {
-        padding: var(--space-sm) var(--space-xs);
-        padding-top: var(--space-md);
+    .sidebar-toggle {
+        padding: var(--space-xs) var(--space-md);
+        font-size: var(--font-size-xs);
     }
     
     .filter-tab {
         padding: 4px var(--space-sm);
         font-size: var(--font-size-xs);
-    }
-    
-    /* Even more compact POI cards */
-    .poi-card__image-wrapper {
-        width: 80px;
-        min-height: 80px;
-    }
-    
-    .poi-card__info {
-        padding: var(--space-xs) var(--space-sm);
-    }
-    
-    .poi-card__name {
-        font-size: var(--font-size-xs);
-        font-weight: 600;
-    }
-    
-    .poi-card__alley {
-        font-size: 10px;
-    }
-    
-    .alley-icon {
-        display: none;
     }
     
     /* Modal smaller */
@@ -1242,7 +1323,7 @@ img {
 }
 
 /* ===========================================
-   LANDSCAPE MOBILE (short height)
+   LANDSCAPE MOBILE
    =========================================== */
 @media (max-height: 500px) and (orientation: landscape) {
     :root {
@@ -1254,40 +1335,39 @@ img {
     }
     
     .map-wrapper {
+        position: relative;
         height: 100%;
         width: 60%;
-        order: 1;
     }
     
     .sidebar {
+        position: relative;
         width: 40%;
         height: 100%;
-        order: 2;
-        border-top: none;
-        border-left: 1px solid var(--color-glass-border);
         border-radius: 0;
+        transform: none !important;
     }
     
-    .sidebar::before {
+    .sidebar__drag-handle {
         display: none;
     }
     
-    .filter-tabs {
-        padding: var(--space-xs);
-    }
-    
-    .filter-tab {
-        padding: 2px var(--space-sm);
-        font-size: 10px;
+    .sidebar-toggle {
+        display: none;
     }
     
     .poi-list {
-        padding: var(--space-xs);
+        grid-template-columns: 1fr;
+    }
+    
+    .poi-card {
+        aspect-ratio: auto;
+        flex-direction: row;
     }
     
     .poi-card__image-wrapper {
         width: 60px;
-        min-height: 60px;
+        height: 60px;
     }
     
     .modal-card {
@@ -1340,7 +1420,6 @@ img {
     }
     
     .marker-icon img {
-        /* Disable hover effects on touch devices */
         transform: none !important;
     }
     
