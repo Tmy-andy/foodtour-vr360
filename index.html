@@ -10,8 +10,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     
     <!-- Pannellum CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
@@ -23,20 +30,26 @@
     <!-- Header -->
     <header class="header">
         <div class="header__logo">
-            <span class="header__icon">🏮</span>
+            <img src="assets/icons/lantern.png" alt="Đèn lồng" class="header__icon">
             <h1 class="header__title">Hẻm Sài Gòn</h1>
         </div>
         <div class="header__search">
             <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm quán ăn, cafe...">
-            <button class="search-btn" id="search-btn">🔍</button>
+            <button class="search-btn" id="search-btn">
+                <i data-lucide="search"></i>
+            </button>
         </div>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Chuyển đổi giao diện" title="Chuyển đổi sáng/tối">
+            <img src="assets/icons/moon.png" alt="Dark mode" class="theme-toggle__icon theme-toggle__icon--dark">
+            <img src="assets/icons/sun.png" alt="Light mode" class="theme-toggle__icon theme-toggle__icon--light">
+        </button>
     </header>
 
     <!-- Main Container -->
     <div class="main-container">
         <!-- Mobile Toggle Button (hidden by default, shown when sidebar is collapsed) -->
         <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Mở danh sách">
-            <span class="sidebar-toggle__icon">📋</span>
+            <i data-lucide="list" class="sidebar-toggle__icon"></i>
             <span class="sidebar-toggle__text">Danh sách</span>
         </button>
 
@@ -49,11 +62,18 @@
             
             <!-- Filter Tabs -->
             <div class="filter-tabs">
-                <button class="filter-tab active" data-category="all">Tất cả</button>
-                <button class="filter-tab" data-category="food">🍜 Ẩm thực</button>
-                <button class="filter-tab" data-category="cafe">☕ Cafe</button>
-                <button class="filter-tab" data-category="art">🎨 Nghệ thuật</button>
-                <button class="filter-tab" data-category="hotel">🏨 Lưu trú</button>
+                <button class="filter-tab active" data-category="all">
+                    <i data-lucide="layout-grid" class="filter-tab__icon"></i>
+                    <span>Tất cả</span>
+                </button>
+                <button class="filter-tab" data-category="food">
+                    <i data-lucide="utensils" class="filter-tab__icon"></i>
+                    <span>Ẩm thực</span>
+                </button>
+                <button class="filter-tab" data-category="cafe">
+                    <i data-lucide="coffee" class="filter-tab__icon"></i>
+                    <span>Cafe</span>
+                </button>
             </div>
             
             <!-- POI List -->
@@ -107,6 +127,9 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     
     <!-- Pannellum JS -->
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>

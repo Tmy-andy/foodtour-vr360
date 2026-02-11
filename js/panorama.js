@@ -195,17 +195,21 @@ function handlePOIHotspotClick(poi) {
 // ===========================================
 
 /**
- * Mở panorama viewer
- * @param {Object} alley - Alley object
+ * Mở panorama với alley và scene cụ thể
+ * @param {Object} alley - Alley config
  * @param {string} sceneId - Scene ID to start
  */
 export function openPanorama(alley, sceneId) {
+    console.log('🎬 openPanorama called with:', { alley: alley.alleyName, sceneId });
+    
     const elements = getElements();
     
     if (!elements.overlay || !elements.container) {
-        console.error('Panorama elements not found');
+        console.error('❌ Panorama elements not found');
         return;
     }
+    
+    console.log('✅ Panorama elements found, proceeding...');
     
     // Update state
     setState('isPanoramaOpen', true);

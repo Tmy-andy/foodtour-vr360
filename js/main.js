@@ -3,7 +3,7 @@
  * Bootstrap tất cả modules
  */
 
-import { initMap } from './map.js';
+import { initMap, setMapTileLayer } from './map.js';
 import { initPanorama } from './panorama.js';
 import { initUI } from './ui.js';
 import { initNavigation } from './navigation.js';
@@ -15,6 +15,9 @@ function initApp() {
     console.log('🏮 Bản đồ Hẻm Sài Gòn - Initializing...');
     
     try {
+        // Make setMapTileLayer available globally
+        window.setMapTileLayer = setMapTileLayer;
+        
         // 1. Initialize map (Leaflet)
         initMap();
         
@@ -26,6 +29,11 @@ function initApp() {
         
         // 4. Initialize UI components
         initUI();
+        
+        // 5. Initialize Lucide icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
         
         console.log('✅ Bản đồ Hẻm TP.HCM — Ready!');
         console.log('💡 Double-click vào marker để mở panorama 360°');

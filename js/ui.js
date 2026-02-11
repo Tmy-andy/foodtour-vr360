@@ -5,7 +5,7 @@
 
 import { POI_LIST, getPOIsByCategory, searchPOIs, findSceneContainingPOI, getCategoryLabel } from './data.js';
 import { setState, getState, subscribe } from './state.js';
-import { flyToMarker, filterMarkers } from './map.js';
+import { flyToMarker, filterMarkers, setMapTileLayer, highlightMarker, showMarkerLabel } from './map.js';
 import { loadScene, isPanoramaOpen } from './panorama.js';
 import { renderStars, debounce, formatCategory, scrollIntoViewSmooth, escapeHTML } from './utils.js';
 
@@ -54,6 +54,9 @@ export function initUI() {
     // Setup mobile sidebar (drag & toggle)
     setupMobileSidebar();
     
+    // Setup theme toggle
+    setupThemeToggle();
+    
     // Subscribe to state changes
     subscribeToState();
     
@@ -91,6 +94,15 @@ export function renderPOIList(pois) {
 }
 
 /**
+ * Lấy icon path từ POI icon field
+ * @param {string} iconName - Icon name (bunbo, pho, banhmi, coffee, drink)
+ * @returns {string} Icon path
+ */
+function getIconPath(iconName) {
+    return `assets/icons/${iconName}.png`;
+}
+
+/**
  * Tạo POI card element
  * @param {Object} poi - POI object
  * @returns {HTMLElement} Card element
@@ -100,23 +112,30 @@ function createPOICard(poi) {
     card.className = 'poi-card';
     card.dataset.poiId = poi.id;
     
-    const { emoji } = formatCategory(poi.category);
+    const iconPath = getIconPath(poi.icon);
     
     card.innerHTML = `
         <div class="poi-card__image-wrapper">
             <img src="${escapeHTML(poi.image)}" alt="${escapeHTML(poi.name)}" class="poi-card__image" 
                  onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 fill=%22%23666%22 text-anchor=%22middle%22 font-size=%2230%22>📷</text></svg>'">
-            <span class="poi-card__category-badge">${emoji}</span>
+            <span class="poi-card__category-badge">
+                <img src="${iconPath}" alt="${poi.icon}" class="category-badge__icon">
+            </span>
         </div>
         <div class="poi-card__info">
             <h3 class="poi-card__name">${escapeHTML(poi.name)}</h3>
             <p class="poi-card__alley">
-                <span class="alley-icon">📍</span>
+                <i data-lucide="map-pin" class="alley-icon"></i>
                 ${escapeHTML(poi.alleyName)}
             </p>
             <div class="poi-card__rating">${renderStars(poi.rating)}</div>
         </div>
     `;
+    
+    // Initialize Lucide icons for this card
+    if (window.lucide) {
+        window.lucide.createIcons({ nodes: [card] });
+    }
     
     // Click event
     card.addEventListener('click', () => handlePOICardClick(poi));
@@ -129,11 +148,20 @@ function createPOICard(poi) {
  * @param {Object} poi - POI object
  */
 function handlePOICardClick(poi) {
+    console.log('POI card clicked:', poi.name, poi.id);
+    
     // Update state
     setState('currentPOI', poi);
     
     // Fly to marker on map
     flyToMarker(poi.lat, poi.lng);
+    
+    // Bounce marker và hiển thị tên
+    setTimeout(() => {
+        console.log('About to highlight marker...');
+        highlightMarker(poi.id);
+        showMarkerLabel(poi.id, poi.name);
+    }, 800); // Tăng delay để map fly và zoom xong
     
     // Nếu panorama đang mở → chuyển tới scene chứa POI
     if (isPanoramaOpen()) {
@@ -546,4 +574,47 @@ function setupMobileSidebar() {
             setSidebarState(currentState);
         }
     }, 200));
+}
+
+// ===========================================
+// THEME TOGGLE
+// ===========================================
+
+/**
+ * Setup theme toggle (Light/Dark mode)
+ */
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+    
+    // Check saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Apply saved theme or system preference
+    if (savedTheme === 'light' || (!savedTheme && !prefersDark)) {
+        document.body.classList.add('light-mode');
+    }
+    
+    // Update map tiles immediately if map exists
+    if (window.setMapTileLayer) {
+        const isLight = document.body.classList.contains('light-mode');
+        window.setMapTileLayer(isLight ? 'light' : 'dark');
+    }
+    
+    // Toggle theme on click
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+        
+        // Save preference
+        const isLight = document.body.classList.contains('light-mode');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        
+        // Update map tiles
+        if (window.setMapTileLayer) {
+            window.setMapTileLayer(isLight ? 'light' : 'dark');
+        }
+        
+        console.log(`🎨 Theme changed to: ${isLight ? 'Light' : 'Dark'}`);
+    });
 }
