@@ -4,7 +4,7 @@
  * V2: Không còn mở panorama từ marker, panorama luôn hiện
  */
 
-import { POI_LIST, getAlleyById } from './data.js';
+import { POI_LIST, getAlleyById, findSceneContainingPOI } from './data.js';
 import { setState, getState, subscribe } from './state.js';
 import { loadAlley } from './panorama.js';
 
@@ -159,7 +159,12 @@ function createMarkers() {
  * @param {Object} poi - POI object
  */
 function handleMarkerClick(poi) {
-    console.log('🎯 Marker clicked (V2):', poi.name);
+    console.log('═══════════════════════════════════════════');
+    console.log('🎯 [MAP] POI CLICKED:');
+    console.log('   - POI ID:', poi.id);
+    console.log('   - POI Name:', poi.name);
+    console.log('   - Alley ID (from POI):', poi.alleyId);
+    console.log('═══════════════════════════════════════════');
     
     // Fly to marker
     map.flyTo([poi.lat, poi.lng], 18, { duration: 0.5 });
@@ -180,13 +185,29 @@ function handleMarkerClick(poi) {
     // Active card trong drawer và scroll đến card đó
     activatePOICard(poi.id);
     
-    // V2: Load alley vào panorama panel (luôn hiện)
-    const alley = getAlleyById(poi.alleyId);
-    if (alley && alley.scenes.length > 0) {
-        console.log('🎬 Loading alley into panorama:', alley.id);
+    // V2: Load đúng scene chứa POI (không phải scene đầu tiên)
+    const result = findSceneContainingPOI(poi.id);
+    
+    if (result) {
+        const { alley, scene } = result;
+        console.log('🎬 [MAP] Found scene containing POI:');
+        console.log('   - Alley:', alley.alleyId, alley.alleyName);
+        console.log('   - Scene:', scene.sceneId, scene.sceneName);
+        
         setState('currentAlley', alley);
-        setState('currentScene', alley.scenes[0].sceneId);
-        loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+        setState('currentScene', scene.sceneId);
+        loadAlley(alley.alleyId, scene.sceneId);
+    } else {
+        // Fallback: load alley với scene đầu tiên nếu không tìm thấy hotspot
+        const alley = getAlleyById(poi.alleyId);
+        if (alley && alley.scenes.length > 0) {
+            console.log('⚠️ [MAP] POI hotspot not found, loading first scene of alley');
+            setState('currentAlley', alley);
+            setState('currentScene', alley.scenes[0].sceneId);
+            loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+        } else {
+            console.error('❌ [MAP] Alley NOT FOUND for:', poi.alleyId);
+        }
     }
 }
 

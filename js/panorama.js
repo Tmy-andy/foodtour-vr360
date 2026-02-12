@@ -25,7 +25,9 @@ const getElements = () => ({
     container: document.getElementById('panorama-container'),
     loading: document.getElementById('panorama-loading'),
     sceneInfo: document.getElementById('scene-info'),
-    sceneName: document.getElementById('scene-name')
+    sceneName: document.getElementById('scene-name'),
+    poiInfo: document.getElementById('current-poi-info'),
+    poiName: document.getElementById('current-poi-name')
 });
 
 // ===========================================
@@ -44,6 +46,9 @@ export function initPanorama() {
     // Set callback cho navigation
     setLoadSceneCallback(loadScene);
     
+    // Subscribe to currentPOI changes để hiển thị POI info
+    subscribe('currentPOI', updateCurrentPOIInfo);
+    
     // Auto-load scene đầu tiên của alley đầu tiên
     if (ALLEY_LIST && ALLEY_LIST.length > 0) {
         const firstAlley = ALLEY_LIST[0];
@@ -59,6 +64,23 @@ export function initPanorama() {
     }
     
     console.log('✅ Panorama engine initialized');
+}
+
+/**
+ * Cập nhật POI info overlay khi chọn POI
+ * @param {Object} poi - POI object
+ */
+function updateCurrentPOIInfo(poi) {
+    const elements = getElements();
+    
+    if (!elements.poiInfo || !elements.poiName) return;
+    
+    if (poi && poi.name) {
+        elements.poiName.textContent = poi.name;
+        elements.poiInfo.classList.remove('hidden');
+    } else {
+        elements.poiInfo.classList.add('hidden');
+    }
 }
 
 /**
@@ -150,7 +172,13 @@ function handlePOIHotspotClick(poi) {
 // ===========================================
 
 function initPanoramaViewer(alley, sceneId) {
-    console.log('🎬 initPanoramaViewer:', alley.alleyName, sceneId);
+    console.log('═══════════════════════════════════════════');
+    console.log('🎥 [PANORAMA] LOADING VR:');
+    console.log('   - Alley ID:', alley.alleyId);
+    console.log('   - Alley Name:', alley.alleyName);
+    console.log('   - Scene ID:', sceneId);
+    console.log('   - Total scenes in alley:', alley.scenes.length);
+    console.log('═══════════════════════════════════════════');
     
     const elements = getElements();
     
@@ -181,25 +209,26 @@ function initPanoramaViewer(alley, sceneId) {
         viewer = window.pannellum.viewer(elements.container, config);
         
         viewer.on('load', () => {
-            console.log('✅ Panorama loaded');
+            console.log('✅ [PANORAMA] VR Loaded successfully!');
+            console.log('   - Current scene:', viewer.getScene());
             if (elements.loading) {
                 elements.loading.classList.add('hidden');
             }
         });
         
         viewer.on('scenechange', (newSceneId) => {
-            console.log('🔄 Scene changed to:', newSceneId);
+            console.log('🔄 [PANORAMA] Scene changed to:', newSceneId);
             currentSceneData = getSceneById(newSceneId);
             setState('currentScene', currentSceneData);
             updateSceneInfo(newSceneId);
         });
         
         viewer.on('error', (err) => {
-            console.error('Pannellum error:', err);
+            console.error('❌ [PANORAMA] Pannellum error:', err);
         });
         
     } catch (error) {
-        console.error('Error creating panorama viewer:', error);
+        console.error('❌ [PANORAMA] Error creating viewer:', error);
     }
 }
 
@@ -223,14 +252,16 @@ export function switchToAlleyScene(alley, sceneId) {
  * @param {string} sceneId - ID của scene đầu tiên (optional)
  */
 export function loadAlley(alleyId, sceneId = null) {
+    console.log('📥 [PANORAMA] loadAlley called with:', alleyId);
+    
     const alley = getAlleyById(alleyId);
     if (!alley) {
-        console.error('❌ Alley not found:', alleyId);
+        console.error('❌ [PANORAMA] Alley NOT FOUND in ALLEY_LIST:', alleyId);
         return;
     }
     
     const targetSceneId = sceneId || alley.scenes[0]?.sceneId;
-    console.log('📍 Loading alley:', alley.alleyName, 'scene:', targetSceneId);
+    console.log('📍 [PANORAMA] Found alley:', alley.alleyName, '| Target scene:', targetSceneId);
     
     initPanoramaViewer(alley, targetSceneId);
 }

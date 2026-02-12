@@ -1221,6 +1221,53 @@ body.light-mode .cluster-icon {
     font-weight: 500;
 }
 
+/* Current POI Info - Hiển thị quán đang xem */
+.current-poi-info {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    z-index: 1020;
+    background: var(--gradient-primary);
+    backdrop-filter: blur(10px);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    box-shadow: 0 4px 15px rgba(224, 64, 251, 0.4);
+    animation: poi-info-pulse 2s ease-in-out infinite;
+    max-width: 280px;
+}
+
+.current-poi-info.hidden {
+    display: none;
+}
+
+.current-poi-info__icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.current-poi-info__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@keyframes poi-info-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(224, 64, 251, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(224, 64, 251, 0.6);
+    }
+}
+
 /* ===========================================
    PANEL FULLSCREEN BUTTONS
    =========================================== */

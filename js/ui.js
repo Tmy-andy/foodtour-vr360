@@ -166,13 +166,27 @@ function handlePOICardClick(poi) {
         showMarkerLabel(poi.id, poi.name);
     }, 800);
     
-    // V2: Luôn load alley vào panorama (vì panorama luôn hiện)
-    const alley = getAlleyById(poi.alleyId);
-    if (alley && alley.scenes.length > 0) {
-        console.log('🎬 Loading alley into panorama:', alley.id);
+    // V2: Load đúng scene chứa POI (không phải scene đầu tiên)
+    const result = findSceneContainingPOI(poi.id);
+    
+    if (result) {
+        const { alley, scene } = result;
+        console.log('🎬 [UI] Found scene containing POI:');
+        console.log('   - Alley:', alley.alleyId, alley.alleyName);
+        console.log('   - Scene:', scene.sceneId, scene.sceneName);
+        
         setState('currentAlley', alley);
-        setState('currentScene', alley.scenes[0].sceneId);
-        loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+        setState('currentScene', scene.sceneId);
+        loadAlley(alley.alleyId, scene.sceneId);
+    } else {
+        // Fallback: load alley với scene đầu tiên nếu không tìm thấy hotspot
+        const alley = getAlleyById(poi.alleyId);
+        if (alley && alley.scenes.length > 0) {
+            console.log('⚠️ [UI] POI hotspot not found, loading first scene of alley');
+            setState('currentAlley', alley);
+            setState('currentScene', alley.scenes[0].sceneId);
+            loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+        }
     }
     
     // Đóng drawer sau khi chọn (mobile UX)
