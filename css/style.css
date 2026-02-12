@@ -412,7 +412,7 @@ body.light-mode .modal-close:hover {
 }
 
 body.light-mode .modal-card__name {
-    color: var(--color-dark);
+    color: #1A1A2E;
 }
 
 body.light-mode .modal-card__alley {
@@ -1727,11 +1727,7 @@ body.light-mode .cluster-icon {
     }
     
     .header__title {
-        font-size: var(--font-size-base);
-        letter-spacing: 1px;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        display: none;
     }
     
     .header__controls {

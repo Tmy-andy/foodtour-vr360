@@ -23,7 +23,7 @@ let currentSceneLatLng = null; // Cache lat/lng của scene hiện tại
 
 // FOV Cone config - Màu chủ đạo gradient (magenta → cyan)
 const FOV_CONE_CONFIG = {
-    baseRadiusMeters: 50,      // Bán kính cơ bản (sẽ thay đổi theo hfov)
+    fixedRadius: 53,           // Bán kính CỐ ĐỊNH (không đổi khi zoom) - 2/3 của 80
     fillColor: 'rgba(224, 64, 251, 0.25)',    // Magenta với độ trong suốt
     strokeColor: 'rgba(224, 64, 251, 0.8)',   // Magenta đậm hơn cho viền
     strokeWeight: 2,
@@ -56,24 +56,11 @@ export function initSync() {
 // ===========================================
 
 /**
- * Tính bán kính FOV Cone dựa trên HFOV
- * Zoom in (hfov nhỏ) → cone dài hơn nhưng hẹp hơn
- * Zoom out (hfov lớn) → cone ngắn hơn nhưng rộng hơn
+ * Bán kính FOV Cone CỐ ĐỊNH - không thay đổi theo zoom
+ * Chỉ có góc mở (fovDeg) thay đổi theo hfov của viewer
  */
-function calculateConeRadius(hfov) {
-    // hfov thường từ 30° (zoom in) đến 120° (zoom out)
-    // Công thức: bán kính tỉ lệ nghịch với hfov
-    const minHfov = 30;
-    const maxHfov = 120;
-    const minRadius = 25;  // meters khi zoom out max
-    const maxRadius = 80;  // meters khi zoom in max
-    
-    // Normalize hfov về 0-1
-    const normalizedHfov = (hfov - minHfov) / (maxHfov - minHfov);
-    // Đảo ngược: zoom in (hfov thấp) → radius cao
-    const radius = maxRadius - (normalizedHfov * (maxRadius - minRadius));
-    
-    return Math.max(minRadius, Math.min(maxRadius, radius));
+function calculateConeRadius() {
+    return FOV_CONE_CONFIG.fixedRadius;
 }
 
 /**
@@ -82,16 +69,17 @@ function calculateConeRadius(hfov) {
  * @param {number} lng - Longitude tâm
  * @param {number} bearingDeg - Hướng nhìn (0=Bắc, 90=Đông, 180=Nam, 270=Tây)
  * @param {number} fovDeg - Góc mở ngang (horizontal field of view)
+ * @param {number} radiusMeters - Bán kính cone (tính từ hfov)
  */
-function updateFOVCone(lat, lng, bearingDeg, fovDeg) {
+function updateFOVCone(lat, lng, bearingDeg, fovDeg, radiusMeters) {
     const map = getMap();
     if (!map) return;
     
-    // Tính bán kính cone dựa trên hfov
-    const radiusMeters = calculateConeRadius(fovDeg);
+    // Sử dụng radius được truyền vào (đã tính dựa trên hfov)
+    const radius = radiusMeters || calculateConeRadius(fovDeg);
     
     // Tính các điểm của polygon hình quạt
-    const points = calculateConePoints(lat, lng, bearingDeg, fovDeg, radiusMeters);
+    const points = calculateConePoints(lat, lng, bearingDeg, fovDeg, radius);
     
     if (fovCone) {
         // Cập nhật polygon đã tồn tại
@@ -187,7 +175,7 @@ function updateSceneMarker(lat, lng, animate = false) {
         const sceneIcon = window.L.divIcon({
             className: 'scene-position-marker pulsing',
             iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconAnchor: [12, 12]  // Tâm icon = tâm FOV cone
         });
         
         sceneMarker = window.L.marker([lat, lng], {
@@ -276,15 +264,23 @@ function syncPanoramaToMap() {
                 const currentScene = getCurrentScene();
                 const northOffset = currentScene?.northOffset || 0;
                 
-                // Tính bearing: yaw + northOffset
-                const bearing = (currentYaw + northOffset + 360) % 360;
+                // Tính bearing cho bản đồ:
+                // - Pannellum: yaw=0 là hướng mặc định của ảnh panorama
+                // - Map: bearing=0 là hướng Bắc
+                // - northOffset: góc lệch giữa hướng mặc định panorama và hướng Bắc thực
+                // Công thức: bearing = yaw + northOffset (đã normalize về 0-360)
+                const bearing = ((currentYaw + northOffset) % 360 + 360) % 360;
                 
-                // Update FOV Cone với hfov động
+                // Bán kính CỐ ĐỊNH, chỉ góc mở thay đổi theo hfov
+                const radius = calculateConeRadius();
+                
+                // Update FOV Cone: góc mở = hfov, bán kính cố định
                 updateFOVCone(
                     currentSceneLatLng.lat, 
                     currentSceneLatLng.lng, 
                     bearing, 
-                    currentHfov
+                    currentHfov,
+                    radius
                 );
             }
         }
