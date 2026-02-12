@@ -1,12 +1,13 @@
 /**
- * UI LAYER - ui.js
- * Quản lý UI components: sidebar, modal, filter, search
+ * UI LAYER - ui.js (V2 - Split Panel Layout)
+ * Quản lý UI components: POI drawer, modal, filter, search
+ * V2: Thay sidebar bằng FAB + Bottom Drawer
  */
 
-import { POI_LIST, getPOIsByCategory, searchPOIs, findSceneContainingPOI, getCategoryLabel } from './data.js';
+import { POI_LIST, getPOIsByCategory, searchPOIs, findSceneContainingPOI, getCategoryLabel, getAlleyById } from './data.js';
 import { setState, getState, subscribe } from './state.js';
 import { flyToMarker, filterMarkers, setMapTileLayer, highlightMarker, showMarkerLabel } from './map.js';
-import { loadScene, isPanoramaOpen } from './panorama.js';
+import { loadScene, loadAlley } from './panorama.js';
 import { renderStars, debounce, formatCategory, scrollIntoViewSmooth, escapeHTML } from './utils.js';
 
 // ===========================================
@@ -51,8 +52,11 @@ export function initUI() {
     // Setup modal
     setupModal(elements);
     
-    // Setup mobile sidebar (drag & toggle)
-    setupMobileSidebar();
+    // V2: Setup POI Drawer (FAB + Bottom Sheet)
+    setupPOIDrawer();
+    
+    // V2: Setup Fullscreen buttons
+    setupFullscreenButtons();
     
     // Setup theme toggle
     setupThemeToggle();
@@ -60,7 +64,7 @@ export function initUI() {
     // Subscribe to state changes
     subscribeToState();
     
-    console.log('✅ UI initialized');
+    console.log('✅ UI initialized (V2)');
 }
 
 // ===========================================
@@ -144,11 +148,11 @@ function createPOICard(poi) {
 }
 
 /**
- * Xử lý click POI card
+ * Xử lý click POI card (V2)
  * @param {Object} poi - POI object
  */
 function handlePOICardClick(poi) {
-    console.log('POI card clicked:', poi.name, poi.id);
+    console.log('POI card clicked (V2):', poi.name, poi.id);
     
     // Update state
     setState('currentPOI', poi);
@@ -158,21 +162,24 @@ function handlePOICardClick(poi) {
     
     // Bounce marker và hiển thị tên
     setTimeout(() => {
-        console.log('About to highlight marker...');
         highlightMarker(poi.id);
         showMarkerLabel(poi.id, poi.name);
-    }, 800); // Tăng delay để map fly và zoom xong
+    }, 800);
     
-    // Nếu panorama đang mở → chuyển tới scene chứa POI
-    if (isPanoramaOpen()) {
-        const result = findSceneContainingPOI(poi.id);
-        if (result) {
-            // Check if same alley
-            const currentAlley = getState('currentAlley');
-            if (currentAlley && currentAlley.alleyId === result.alley.alleyId) {
-                loadScene(result.scene.sceneId);
-            }
-        }
+    // V2: Luôn load alley vào panorama (vì panorama luôn hiện)
+    const alley = getAlleyById(poi.alleyId);
+    if (alley && alley.scenes.length > 0) {
+        console.log('🎬 Loading alley into panorama:', alley.id);
+        setState('currentAlley', alley);
+        setState('currentScene', alley.scenes[0].sceneId);
+        loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+    }
+    
+    // Đóng drawer sau khi chọn (mobile UX)
+    const drawer = document.getElementById('drawer');
+    if (drawer && drawer.classList.contains('is-open')) {
+        setState('isDrawerOpen', false);
+        drawer.classList.remove('is-open');
     }
 }
 
@@ -426,154 +433,183 @@ function subscribeToState() {
 }
 
 // ===========================================
-// MOBILE SIDEBAR - Drag & Toggle
+// POI DRAWER - FAB + Bottom Sheet (V2)
 // ===========================================
 
 /**
- * Setup mobile sidebar với khả năng kéo lên/xuống
+ * Setup POI Drawer (FAB button + Bottom Sheet)
+ * V2: Thay thế sidebar cũ
  */
-function setupMobileSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const dragHandle = document.getElementById('sidebar-drag-handle');
-    const toggleBtn = document.getElementById('sidebar-toggle');
+function setupPOIDrawer() {
+    const fab = document.getElementById('fab-toggle');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    const closeBtn = document.getElementById('drawer-close');
     
-    if (!sidebar || !dragHandle || !toggleBtn) return;
-    
-    // Check if mobile
-    const isMobile = () => window.innerWidth <= 768;
-    
-    let startY = 0;
-    let startHeight = 0;
-    let isDragging = false;
-    
-    // Sidebar states: 'collapsed', 'half', 'expanded'
-    let currentState = 'half';
-    
-    /**
-     * Set sidebar state
-     */
-    function setSidebarState(state) {
-        currentState = state;
-        sidebar.classList.remove('sidebar--collapsed', 'sidebar--half', 'sidebar--expanded');
-        
-        switch (state) {
-            case 'collapsed':
-                sidebar.classList.add('sidebar--collapsed');
-                toggleBtn.classList.remove('hidden');
-                break;
-            case 'half':
-                sidebar.classList.add('sidebar--half');
-                toggleBtn.classList.add('hidden');
-                break;
-            case 'expanded':
-                sidebar.classList.add('sidebar--expanded');
-                toggleBtn.classList.add('hidden');
-                break;
-        }
+    if (!fab || !drawer) {
+        console.warn('POI Drawer elements not found');
+        return;
     }
     
-    /**
-     * Handle drag start
-     */
-    function handleDragStart(e) {
-        if (!isMobile()) return;
+    // Toggle drawer khi click FAB
+    fab.addEventListener('click', () => {
+        const isOpen = drawer.classList.contains('open');
         
-        isDragging = true;
-        startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-        startHeight = sidebar.offsetHeight;
-        
-        sidebar.style.transition = 'none';
-        document.body.style.userSelect = 'none';
-        document.body.style.touchAction = 'none';
-    }
-    
-    /**
-     * Handle drag move
-     */
-    function handleDragMove(e) {
-        if (!isDragging || !isMobile()) return;
-        
-        const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-        const deltaY = startY - currentY;
-        const newHeight = Math.max(0, Math.min(startHeight + deltaY, window.innerHeight - 60));
-        
-        sidebar.style.height = `${newHeight}px`;
-    }
-    
-    /**
-     * Handle drag end
-     */
-    function handleDragEnd() {
-        if (!isDragging) return;
-        
-        isDragging = false;
-        sidebar.style.transition = '';
-        sidebar.style.height = '';
-        document.body.style.userSelect = '';
-        document.body.style.touchAction = '';
-        
-        const currentHeight = sidebar.offsetHeight;
-        const windowHeight = window.innerHeight - 60;
-        const ratio = currentHeight / windowHeight;
-        
-        // Snap to state based on position
-        if (ratio < 0.25) {
-            setSidebarState('collapsed');
-        } else if (ratio < 0.65) {
-            setSidebarState('half');
+        if (isOpen) {
+            closeDrawer();
         } else {
-            setSidebarState('expanded');
+            openDrawer();
         }
-    }
-    
-    // Drag handle events
-    dragHandle.addEventListener('mousedown', handleDragStart);
-    dragHandle.addEventListener('touchstart', handleDragStart, { passive: true });
-    
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('touchmove', handleDragMove, { passive: true });
-    
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchend', handleDragEnd);
-    
-    // Toggle button click
-    toggleBtn.addEventListener('click', () => {
-        setSidebarState('half');
     });
     
-    // Double tap on drag handle to expand/collapse
-    let lastTap = 0;
-    dragHandle.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        
-        if (tapLength < 300 && tapLength > 0) {
-            // Double tap detected
-            if (currentState === 'expanded') {
-                setSidebarState('half');
-            } else {
-                setSidebarState('expanded');
-            }
-            e.preventDefault();
-        }
-        lastTap = currentTime;
-    });
-    
-    // Initialize state
-    if (isMobile()) {
-        setSidebarState('half');
+    // Close button
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeDrawer);
     }
     
-    // Handle resize
-    window.addEventListener('resize', debounce(() => {
-        if (!isMobile()) {
-            sidebar.classList.remove('sidebar--collapsed', 'sidebar--half', 'sidebar--expanded');
-            toggleBtn.classList.add('hidden');
-            sidebar.style.height = '';
-        } else {
-            setSidebarState(currentState);
+    // Click overlay để đóng
+    if (overlay) {
+        overlay.addEventListener('click', closeDrawer);
+    }
+    
+    // Swipe down to close (mobile)
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    
+    drawer.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    drawer.addEventListener('touchmove', (e) => {
+        touchCurrentY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    drawer.addEventListener('touchend', () => {
+        const deltaY = touchCurrentY - touchStartY;
+        if (deltaY > 100) {
+            closeDrawer();
         }
-    }, 200));
+        touchStartY = 0;
+        touchCurrentY = 0;
+    });
+    
+    /**
+     * Mở drawer
+     */
+    function openDrawer() {
+        drawer.classList.add('is-open');
+        fab.classList.add('is-active');
+        if (overlay) overlay.classList.add('is-visible');
+        setState('isDrawerOpen', true);
+        console.log('📋 POI Drawer opened');
+    }
+    
+    /**
+     * Đóng drawer
+     */
+    function closeDrawer() {
+        drawer.classList.remove('is-open');
+        fab.classList.remove('is-active');
+        if (overlay) overlay.classList.remove('is-visible');
+        setState('isDrawerOpen', false);
+        console.log('📋 POI Drawer closed');
+    }
+    
+    // Subscribe to state
+    subscribe('isDrawerOpen', (isOpen) => {
+        if (isOpen) {
+            drawer.classList.add('is-open');
+            fab.classList.add('is-active');
+            if (overlay) overlay.classList.add('is-visible');
+        } else {
+            drawer.classList.remove('is-open');
+            fab.classList.remove('is-active');
+            if (overlay) overlay.classList.remove('is-visible');
+        }
+    });
+    
+    console.log('✅ POI Drawer setup complete');
+}
+
+// ===========================================
+// FULLSCREEN BUTTONS - Panel Expand/Collapse
+// ===========================================
+
+/**
+ * Setup fullscreen buttons cho VR và Map panels
+ */
+function setupFullscreenButtons() {
+    const splitContainer = document.getElementById('split-container');
+    const vrPanel = document.getElementById('panel-vr');
+    const mapPanel = document.getElementById('panel-map');
+    const vrBtn = document.getElementById('vr-fullscreen-btn');
+    const mapBtn = document.getElementById('map-fullscreen-btn');
+    
+    if (!splitContainer || !vrPanel || !mapPanel) {
+        console.warn('Fullscreen: Missing panel elements');
+        return;
+    }
+    
+    // Import invalidateSizes từ splitter để re-render sau khi toggle
+    const invalidatePanels = () => {
+        // Delay để CSS apply
+        setTimeout(() => {
+            // Trigger resize event để Leaflet và Pannellum recalculate
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    };
+    
+    /**
+     * Toggle fullscreen cho một panel
+     * @param {HTMLElement} panel - Panel cần toggle
+     */
+    function toggleFullscreen(panel) {
+        const isCurrentlyFullscreen = panel.classList.contains('is-fullscreen');
+        
+        if (isCurrentlyFullscreen) {
+            // Exit fullscreen
+            panel.classList.remove('is-fullscreen');
+            splitContainer.classList.remove('has-fullscreen');
+            console.log('🔲 Exit fullscreen mode');
+        } else {
+            // Enter fullscreen - remove other panel's fullscreen first
+            vrPanel.classList.remove('is-fullscreen');
+            mapPanel.classList.remove('is-fullscreen');
+            
+            panel.classList.add('is-fullscreen');
+            splitContainer.classList.add('has-fullscreen');
+            console.log('🔳 Enter fullscreen mode:', panel.id);
+        }
+        
+        invalidatePanels();
+    }
+    
+    // VR Panel fullscreen button
+    if (vrBtn) {
+        vrBtn.addEventListener('click', () => {
+            toggleFullscreen(vrPanel);
+        });
+    }
+    
+    // Map Panel fullscreen button
+    if (mapBtn) {
+        mapBtn.addEventListener('click', () => {
+            toggleFullscreen(mapPanel);
+        });
+    }
+    
+    // ESC key to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && splitContainer.classList.contains('has-fullscreen')) {
+            vrPanel.classList.remove('is-fullscreen');
+            mapPanel.classList.remove('is-fullscreen');
+            splitContainer.classList.remove('has-fullscreen');
+            invalidatePanels();
+            console.log('🔲 Exit fullscreen via ESC');
+        }
+    });
+    
+    console.log('✅ Fullscreen buttons setup complete');
 }
 
 // ===========================================

@@ -1,5 +1,5 @@
 /**
- * MAIN ENTRY POINT - main.js
+ * MAIN ENTRY POINT - main.js (V2 - Split Panel Layout)
  * Bootstrap tất cả modules
  */
 
@@ -7,36 +7,44 @@ import { initMap, setMapTileLayer } from './map.js';
 import { initPanorama } from './panorama.js';
 import { initUI } from './ui.js';
 import { initNavigation } from './navigation.js';
+import { initSplitter } from './splitter.js';
+import { initSync } from './sync.js';
 
 /**
  * Khởi tạo ứng dụng
  */
 function initApp() {
-    console.log('🏮 Bản đồ Hẻm Sài Gòn - Initializing...');
+    console.log('🏮 Hẻm Sài Gòn VR (V2) - Initializing...');
     
     try {
         // Make setMapTileLayer available globally
         window.setMapTileLayer = setMapTileLayer;
         
-        // 1. Initialize map (Leaflet)
+        // 1. Initialize map (Leaflet) - phải init trước để splitter có thể resize
         initMap();
         
-        // 2. Initialize panorama engine (Pannellum)
+        // 2. Initialize panorama engine (Pannellum) - V2: auto-load first scene
         initPanorama();
         
-        // 3. Initialize navigation system
+        // 3. Initialize splitter (drag divider between panels)
+        initSplitter();
+        
+        // 4. Initialize sync engine (FOV cone + scene position marker)
+        initSync();
+        
+        // 5. Initialize navigation system
         initNavigation();
         
-        // 4. Initialize UI components
+        // 6. Initialize UI components
         initUI();
         
-        // 5. Initialize Lucide icons
+        // 7. Initialize Lucide icons
         if (window.lucide) {
             window.lucide.createIcons();
         }
         
-        console.log('✅ Bản đồ Hẻm TP.HCM — Ready!');
-        console.log('💡 Double-click vào marker để mở panorama 360°');
+        console.log('✅ Hẻm Sài Gòn VR — Ready!');
+        console.log('💡 Click marker trên map để xem panorama 360°');
         
     } catch (error) {
         console.error('❌ Error initializing app:', error);

@@ -451,11 +451,293 @@ body.light-mode .marker-icon:hover img {
     filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.6));
 }
 
-/* Main Container */
-.main-container {
+/* ===========================================
+   SPLIT CONTAINER - LAYOUT V2
+   =========================================== */
+.split-container {
     display: flex;
-    height: 100vh;
-    padding-top: var(--header-height);
+    flex-direction: row;
+    height: calc(100vh - var(--header-height));
+    margin-top: var(--header-height);
+    position: relative;
+}
+
+/* Panel Base */
+.panel {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Panel VR - Panorama */
+.panel--vr {
+    flex: 2;
+    min-width: 20%;
+    background: var(--color-darkest);
+}
+
+.panel--vr .panorama-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* Panel Map */
+.panel--map {
+    flex: 1;
+    min-width: 20%;
+}
+
+.panel--map .map-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* Divider - Drag Handle */
+.divider {
+    width: 8px;
+    background: var(--color-dark);
+    cursor: col-resize;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    z-index: 10;
+}
+
+.divider:hover {
+    background: var(--color-magenta);
+}
+
+.divider__grip {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.divider__grip span {
+    width: 4px;
+    height: 4px;
+    background: var(--color-gray-light);
+    border-radius: 50%;
+}
+
+.divider:hover .divider__grip span {
+    background: white;
+}
+
+/* When dragging */
+body.is-dragging {
+    cursor: col-resize !important;
+    user-select: none;
+}
+
+body.is-dragging * {
+    pointer-events: none;
+}
+
+body.is-dragging .divider {
+    pointer-events: auto;
+    background: var(--color-magenta);
+}
+
+/* Mobile: Vertical Split */
+@media (max-width: 768px) {
+    .split-container {
+        flex-direction: column;
+    }
+    
+    .panel--vr {
+        flex: 2;
+        min-height: 30%;
+    }
+    
+    .panel--map {
+        flex: 1;
+        min-height: 20%;
+    }
+    
+    .divider {
+        width: 100%;
+        height: 8px;
+        cursor: row-resize;
+    }
+    
+    .divider__grip {
+        flex-direction: row;
+    }
+    
+    body.is-dragging {
+        cursor: row-resize !important;
+    }
+}
+
+/* ===========================================
+   FAB BUTTON - Floating Action Button
+   =========================================== */
+.fab-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    box-shadow: var(--shadow-glow-pink);
+    transition: all 0.3s ease;
+}
+
+.fab-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 0, 110, 0.6);
+}
+
+.fab-button__icon {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+/* FAB when drawer is open */
+.fab-button.is-active {
+    background: var(--color-dark);
+}
+
+.fab-button.is-active .fab-button__icon {
+    transform: rotate(45deg);
+}
+
+/* ===========================================
+   DRAWER - Side/Bottom Sheet
+   =========================================== */
+.drawer {
+    position: fixed;
+    top: var(--header-height);
+    right: -380px;
+    width: 360px;
+    height: calc(100vh - var(--header-height));
+    background: var(--color-darker);
+    border-left: 1px solid var(--color-glass-border);
+    z-index: 1400;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.drawer.is-open {
+    right: 0;
+}
+
+.drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--color-glass-border);
+    background: var(--color-darkest);
+}
+
+.drawer__title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-light);
+}
+
+.drawer__close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-glass);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-light);
+    transition: all 0.2s ease;
+}
+
+.drawer__close:hover {
+    background: var(--color-magenta);
+    color: white;
+}
+
+.drawer__search {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-glass-border);
+}
+
+.drawer__search .search-input {
+    flex: 1;
+}
+
+/* Drawer Overlay */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1350;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.drawer-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Drawer - Bottom Sheet */
+@media (max-width: 768px) {
+    .drawer {
+        top: auto;
+        bottom: -70vh;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 70vh;
+        border-left: none;
+        border-top: 1px solid var(--color-glass-border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transition: bottom 0.3s ease;
+    }
+    
+    .drawer.is-open {
+        bottom: 0;
+        right: 0;
+    }
+    
+    .fab-button {
+        bottom: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Light Mode Drawer */
+body.light-mode .drawer {
+    background: #FFFFFF;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .drawer__header {
+    background: #F5F5F7;
+}
+
+body.light-mode .drawer__title {
+    color: #1A1A2E;
 }
 
 /* ===========================================
@@ -866,35 +1148,9 @@ body.light-mode .cluster-icon {
 /* ===========================================
    PANORAMA OVERLAY
    =========================================== */
-.panorama-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: black;
-}
-
-.panorama-overlay.hidden {
-    display: none;
-}
-
-.panorama-overlay.fade-in {
-    animation: fadeIn 0.3s ease forwards;
-}
-
-.panorama-overlay.fade-out {
-    animation: fadeOut 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
+/* ===========================================
+   PANORAMA - V2 (Split Panel)
+   =========================================== */
 .panorama-container {
     width: 100%;
     height: 100%;
@@ -948,31 +1204,6 @@ body.light-mode .cluster-icon {
     margin: var(--space-sm) 0;
 }
 
-/* Panorama Close Button */
-.panorama-close-btn {
-    position: absolute;
-    top: var(--space-lg);
-    right: var(--space-lg);
-    z-index: 1020;
-    width: 48px;
-    height: 48px;
-    background: var(--color-glass-strong);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--color-glass-border);
-    border-radius: var(--radius-full);
-    color: white;
-    font-size: var(--font-size-xl);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-normal);
-}
-
-.panorama-close-btn:hover {
-    background: var(--color-magenta);
-    transform: scale(1.1);
-}
-
 /* Scene Info */
 .scene-info {
     position: absolute;
@@ -988,6 +1219,113 @@ body.light-mode .cluster-icon {
     color: white;
     font-size: var(--font-size-sm);
     font-weight: 500;
+}
+
+/* ===========================================
+   PANEL FULLSCREEN BUTTONS
+   =========================================== */
+.panel-fullscreen-btn {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    z-index: 1050;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--color-glass-strong);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.panel-fullscreen-btn:hover {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    transform: scale(1.05);
+}
+
+.panel-fullscreen-btn--map {
+    right: auto;
+    left: var(--space-md);
+}
+
+/* Icon states */
+.fullscreen-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.fullscreen-icon--collapse {
+    display: none;
+}
+
+/* When panel is fullscreen */
+.panel.is-fullscreen .fullscreen-icon--expand {
+    display: none;
+}
+
+.panel.is-fullscreen .fullscreen-icon--collapse {
+    display: block;
+}
+
+/* Fullscreen panel state */
+.panel.is-fullscreen {
+    position: fixed !important;
+    top: var(--header-height) !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: calc(100vh - var(--header-height)) !important;
+    z-index: 1200 !important;
+    flex: none !important;
+}
+
+/* Hide divider and other panel when one is fullscreen */
+.split-container.has-fullscreen .divider {
+    display: none;
+}
+
+.split-container.has-fullscreen .panel:not(.is-fullscreen) {
+    display: none;
+}
+
+/* ===========================================
+   FOV CONE + SCENE POSITION MARKER (Map 2D)
+   =========================================== */
+.scene-position-marker {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--color-magenta), var(--color-cyan));
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 16px rgba(224, 64, 251, 0.7);
+    z-index: 1000;
+}
+
+.scene-position-marker.pulsing {
+    animation: sceneMarkerPulse 2s ease-in-out infinite;
+}
+
+@keyframes sceneMarkerPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 16px rgba(224, 64, 251, 0.7);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 24px rgba(224, 64, 251, 0.95);
+    }
+}
+
+/* FOV Cone Polygon - Leaflet SVG styles */
+.fov-cone-polygon {
+    filter: drop-shadow(0 0 8px rgba(224, 64, 251, 0.5));
 }
 
 /* ===========================================

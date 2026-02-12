@@ -1,6 +1,7 @@
 /**
- * NAVIGATION SYSTEM - navigation.js
+ * NAVIGATION SYSTEM - navigation.js (V2)
  * Quản lý mũi tên điều hướng trong panorama
+ * V2: Panorama luôn hiện, không check isPanoramaOpen
  */
 
 import { getState, subscribe } from './state.js';
@@ -20,15 +21,15 @@ let loadSceneCallback = null;
  * Khởi tạo navigation system
  */
 export function initNavigation() {
-    // Subscribe to scene changes
+    // Subscribe to scene changes - V2: không check isPanoramaOpen
     subscribe('currentScene', (sceneId) => {
-        if (sceneId && getState('isPanoramaOpen')) {
+        if (sceneId) {
             // Navigation arrows được tạo bởi Pannellum hotspots
             // không cần render riêng ở đây
         }
     });
     
-    console.log('✅ Navigation initialized');
+    console.log('✅ Navigation initialized (V2)');
 }
 
 /**
@@ -160,11 +161,13 @@ export function navigateBack() {
 // ===========================================
 
 /**
- * Xử lý keyboard navigation trong panorama
+ * Xử lý keyboard navigation trong panorama (V2: luôn hoạt động)
  * @param {KeyboardEvent} event - Keyboard event
  */
 export function handleKeyboardNavigation(event) {
-    if (!getState('isPanoramaOpen')) return;
+    // V2: Panorama luôn hiện, check currentAlley thay vì isPanoramaOpen
+    const currentAlley = getState('currentAlley');
+    if (!currentAlley) return;
     
     switch (event.key) {
         case 'ArrowUp':

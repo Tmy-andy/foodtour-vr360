@@ -52,63 +52,93 @@
         </div>
     </header>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Mobile Toggle Button (hidden by default, shown when sidebar is collapsed) -->
-        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Mở danh sách">
-            <i data-lucide="list" class="sidebar-toggle__icon"></i>
-            <span class="sidebar-toggle__text">Danh sách</span>
-        </button>
-
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <!-- Drag Handle for mobile -->
-            <div class="sidebar__drag-handle" id="sidebar-drag-handle">
-                <span class="drag-bar"></span>
+    <!-- Main Split Container -->
+    <div class="split-container" id="split-container">
+        <!-- Panel VR - Panorama 360° -->
+        <div class="panel panel--vr" id="panel-vr">
+            <div id="panorama-container" class="panorama-container"></div>
+            <div id="panorama-loading" class="loading-spinner hidden">
+                <div class="spinner"></div>
+                <p>Đang tải panorama...</p>
             </div>
-            
-            <!-- Filter Tabs -->
-            <div class="filter-tabs">
-                <button class="filter-tab active" data-category="all">
-                    <i data-lucide="layout-grid" class="filter-tab__icon"></i>
-                    <span>Tất cả</span>
-                </button>
-                <button class="filter-tab" data-category="food">
-                    <i data-lucide="utensils" class="filter-tab__icon"></i>
-                    <span>Ẩm thực</span>
-                </button>
-                <button class="filter-tab" data-category="cafe">
-                    <i data-lucide="coffee" class="filter-tab__icon"></i>
-                    <span>Cafe</span>
-                </button>
+            <!-- Scene Info -->
+            <div id="scene-info" class="scene-info">
+                <span id="scene-name"></span>
             </div>
-            
-            <!-- POI List -->
-            <div class="poi-list" id="poi-list">
-                <!-- POI cards will be rendered here by JavaScript -->
-            </div>
-        </aside>
-
-        <!-- Map Container -->
-        <main class="map-wrapper">
-            <div id="map-container" class="map-container"></div>
-        </main>
-    </div>
-
-    <!-- Panorama Overlay -->
-    <div id="panorama-overlay" class="panorama-overlay hidden">
-        <div id="panorama-loading" class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Đang tải panorama...</p>
+            <!-- Fullscreen Button - VR Panel (góc trên phải) -->
+            <button class="panel-fullscreen-btn" id="vr-fullscreen-btn" aria-label="Toàn màn hình VR" title="Toàn màn hình">
+                <i data-lucide="maximize-2" class="fullscreen-icon fullscreen-icon--expand"></i>
+                <i data-lucide="minimize-2" class="fullscreen-icon fullscreen-icon--collapse"></i>
+            </button>
         </div>
-        <button id="panorama-close" class="panorama-close-btn" aria-label="Đóng panorama">✕</button>
-        <div id="panorama-container" class="panorama-container"></div>
         
-        <!-- Scene Info -->
-        <div id="scene-info" class="scene-info">
-            <span id="scene-name"></span>
+        <!-- Divider - Drag to resize -->
+        <div class="divider" id="divider">
+            <div class="divider__grip">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <!-- Panel Map - Leaflet 2D -->
+        <div class="panel panel--map" id="panel-map">
+            <!-- Fullscreen Button - Map Panel (góc trên trái) -->
+            <button class="panel-fullscreen-btn panel-fullscreen-btn--map" id="map-fullscreen-btn" aria-label="Toàn màn hình Map" title="Toàn màn hình">
+                <i data-lucide="maximize-2" class="fullscreen-icon fullscreen-icon--expand"></i>
+                <i data-lucide="minimize-2" class="fullscreen-icon fullscreen-icon--collapse"></i>
+            </button>
+            <div id="map-container" class="map-container"></div>
         </div>
     </div>
+
+    <!-- FAB Button - Toggle Drawer -->
+    <button class="fab-button" id="fab-toggle" aria-label="Mở danh sách POI">
+        <i data-lucide="list" class="fab-button__icon"></i>
+    </button>
+
+    <!-- POI Drawer -->
+    <aside class="drawer" id="drawer">
+        <!-- Drawer Header with close button -->
+        <div class="drawer__header">
+            <h2 class="drawer__title">Danh sách địa điểm</h2>
+            <button class="drawer__close" id="drawer-close" aria-label="Đóng">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        
+        <!-- Search in Drawer -->
+        <div class="drawer__search">
+            <input type="text" id="drawer-search-input" class="search-input" placeholder="Tìm kiếm quán ăn, cafe...">
+            <button class="search-btn" id="drawer-search-btn">
+                <i data-lucide="search"></i>
+            </button>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-category="all">
+                <i data-lucide="layout-grid" class="filter-tab__icon"></i>
+                <span>Tất cả</span>
+            </button>
+            <button class="filter-tab" data-category="food">
+                <i data-lucide="utensils" class="filter-tab__icon"></i>
+                <span>Ẩm thực</span>
+            </button>
+            <button class="filter-tab" data-category="cafe">
+                <i data-lucide="coffee" class="filter-tab__icon"></i>
+                <span>Cafe</span>
+            </button>
+        </div>
+        
+        <!-- POI List -->
+        <div class="poi-list" id="poi-list">
+            <!-- POI cards will be rendered here by JavaScript -->
+        </div>
+    </aside>
+
+    <!-- Drawer Overlay (for mobile) -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
 
     <!-- POI Modal -->
     <div id="poi-modal" class="modal-overlay hidden">

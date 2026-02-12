@@ -1,11 +1,12 @@
 /**
- * MAP ENGINE - map.js
+ * MAP ENGINE - map.js (V2 - Split Panel Layout)
  * Quản lý Leaflet map, markers và events
+ * V2: Không còn mở panorama từ marker, panorama luôn hiện
  */
 
 import { POI_LIST, getAlleyById } from './data.js';
 import { setState, getState, subscribe } from './state.js';
-import { openPanorama } from './panorama.js';
+import { loadAlley } from './panorama.js';
 
 // ===========================================
 // MODULE STATE
@@ -53,12 +54,12 @@ let currentTileLayer = null;
  * Khởi tạo Leaflet map
  */
 export function initMap() {
-    // Tạo map instance
+    // Tạo map instance - V2: container nằm trong panel--map
     map = window.L.map('map-container', {
         center: [10.7685, 106.6940],  // TP.HCM - khu vực Phạm Ngũ Lão
         zoom: 17,
         zoomControl: true,
-        doubleClickZoom: false,       // Tắt double-click zoom (dùng cho panorama)
+        doubleClickZoom: true,        // V2: Bật lại double-click zoom (không dùng cho panorama)
         scrollWheelZoom: true
     });
     
@@ -125,25 +126,9 @@ function createMarkers() {
         // Lưu marker vào Map
         markers.set(poi.id, marker);
         
-        // Track clicks để phân biệt single vs double click
-        let clickTimeout = null;
-        let clickCount = 0;
-        
+        // V2: Single click - active card + load alley vào panorama
         marker.on('click', () => {
-            clickCount++;
-            
-            if (clickCount === 1) {
-                clickTimeout = setTimeout(() => {
-                    // Single click - active card và scroll
-                    handleMarkerSingleClick(poi);
-                    clickCount = 0;
-                }, 300);
-            } else if (clickCount === 2) {
-                // Double click - mở panorama
-                clearTimeout(clickTimeout);
-                handleMarkerDoubleClick(poi);
-                clickCount = 0;
-            }
+            handleMarkerClick(poi);
         });
         
         // Hover effects
@@ -166,54 +151,15 @@ function createMarkers() {
 }
 
 // ===========================================
-// EVENT HANDLERS
+// EVENT HANDLERS (V2 - Simplified)
 // ===========================================
 
 /**
- * Xử lý single click marker - active card và scroll
- * @param {Object} poi - POI object
- */
-function handleMarkerSingleClick(poi) {
-    console.log('🎯 Single click marker:', poi.name);
-    
-    // Kiểm tra xem card đã active chưa
-    const container = document.getElementById('poi-list');
-    const currentCard = container?.querySelector(`[data-poi-id="${poi.id}"]`);
-    const isCurrentlyActive = currentCard?.classList.contains('poi-card--active');
-    
-    if (isCurrentlyActive) {
-        // Nếu đã active, click lần 2 → mở panorama
-        console.log('🔥 Card already active, opening panorama...');
-        handleMarkerDoubleClick(poi);
-        return;
-    }
-    
-    // Fly to marker
-    map.flyTo([poi.lat, poi.lng], 18, { duration: 0.5 });
-    
-    // Bounce animation
-    const marker = markers.get(poi.id);
-    if (marker) {
-        const icon = marker.getElement();
-        if (icon) {
-            icon.classList.add('marker-bounce');
-            setTimeout(() => icon.classList.remove('marker-bounce'), 500);
-        }
-    }
-    
-    // Update state
-    setState('currentPOI', poi);
-    
-    // Active card trong sidebar và scroll đến card đó
-    activatePOICard(poi.id);
-}
-
-/**
- * Xử lý single click marker (deprecated - giữ lại để tương thích)
+ * V2: Xử lý click marker - active card + load alley vào panorama (luôn hiện)
  * @param {Object} poi - POI object
  */
 function handleMarkerClick(poi) {
-    console.log('🎯 Marker clicked:', poi.name);
+    console.log('🎯 Marker clicked (V2):', poi.name);
     
     // Fly to marker
     map.flyTo([poi.lat, poi.lng], 18, { duration: 0.5 });
@@ -230,10 +176,22 @@ function handleMarkerClick(poi) {
     
     // Update state
     setState('currentPOI', poi);
+    
+    // Active card trong drawer và scroll đến card đó
+    activatePOICard(poi.id);
+    
+    // V2: Load alley vào panorama panel (luôn hiện)
+    const alley = getAlleyById(poi.alleyId);
+    if (alley && alley.scenes.length > 0) {
+        console.log('🎬 Loading alley into panorama:', alley.id);
+        setState('currentAlley', alley);
+        setState('currentScene', alley.scenes[0].sceneId);
+        loadAlley(poi.alleyId, alley.scenes[0].sceneId);
+    }
 }
 
 /**
- * Active POI card trong sidebar và scroll đến nó
+ * Active POI card trong drawer và scroll đến nó (V2: drawer thay cho sidebar)
  * @param {string} poiId - POI ID
  */
 function activatePOICard(poiId) {
@@ -256,31 +214,6 @@ function activatePOICard(poiId) {
             block: 'center',
             inline: 'nearest'
         });
-    }
-}
-
-/**
- * Xử lý double click marker → mở panorama
- * @param {Object} poi - POI object
- */
-function handleMarkerDoubleClick(poi) {
-    console.log('🔥 Double-click marker:', poi.name);
-    console.log('🔍 POI alleyId:', poi.alleyId);
-    
-    const alley = getAlleyById(poi.alleyId);
-    console.log('🗺️ Found alley:', alley);
-    
-    if (alley && alley.scenes.length > 0) {
-        console.log('🎬 Opening panorama with scenes:', alley.scenes.length);
-        
-        // Update state
-        setState('currentAlley', alley);
-        setState('currentScene', alley.scenes[0].sceneId);
-        
-        // Open panorama
-        openPanorama(alley, alley.scenes[0].sceneId);
-    } else {
-        console.warn(`❌ Không tìm thấy alley cho POI: ${poi.id}`);
     }
 }
 

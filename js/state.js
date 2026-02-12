@@ -4,16 +4,19 @@
  */
 
 // ===========================================
-// STATE OBJECT - Trạng thái ứng dụng
+// STATE OBJECT - Trạng thái ứng dụng (V2)
 // ===========================================
 const state = {
     currentPOI: null,           // POI object đang được chọn/highlight
     currentAlley: null,         // Alley object đang xem panorama
-    currentScene: null,         // Scene ID đang hiển thị trong panorama
+    currentScene: null,         // Scene object đang hiển thị trong panorama
     activeFilters: [],          // Mảng category đang filter: ["food", "cafe"]
     searchQuery: "",            // Từ khóa search hiện tại
-    isPanoramaOpen: false,      // Panorama có đang mở hay không
-    isModalOpen: false          // Modal thông tin có đang mở hay không
+    isModalOpen: false,         // Modal thông tin có đang mở hay không
+    isDrawerOpen: false,        // Drawer (thay thế sidebar) có đang mở hay không
+    currentYaw: 0,              // Yaw hiện tại từ panorama (dùng cho FOV Cone)
+    currentHfov: 100,           // HFOV hiện tại từ panorama (dùng cho FOV Cone)
+    theme: 'dark'               // Theme hiện tại: 'dark' hoặc 'light'
 };
 
 // ===========================================
@@ -85,7 +88,7 @@ export function getAllState() {
 }
 
 /**
- * Reset state về giá trị mặc định
+ * Reset state về giá trị mặc định (V2)
  */
 export function resetState() {
     setState('currentPOI', null);
@@ -93,8 +96,10 @@ export function resetState() {
     setState('currentScene', null);
     setState('activeFilters', []);
     setState('searchQuery', '');
-    setState('isPanoramaOpen', false);
     setState('isModalOpen', false);
+    setState('isDrawerOpen', false);
+    setState('currentYaw', 0);
+    setState('currentHfov', 100);
 }
 
 /**

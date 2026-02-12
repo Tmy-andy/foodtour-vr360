@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DATA LAYER - data.js
  * Chứa tất cả dữ liệu POI và Alley scenes
  */
@@ -1535,15 +1535,18 @@ export const POI_LIST = [
 // ALLEY LIST - Danh sách tuyến hẻm với scenes
 // ===========================================
 
-// Demo panorama images từ nguồn miễn phí
+// Demo panorama - Dùng chung 1 ảnh equirectangular miễn phí
 // Nguồn: https://pannellum.org/documentation/examples/
+const SHARED_PANORAMA = "https://pannellum.org/images/alma.jpg";
+
+// Tất cả scenes dùng chung 1 ảnh demo
 const DEMO_PANORAMAS = {
-    street1: "https://pannellum.org/images/alma.jpg",
-    street2: "https://pannellum.org/images/bma-702.jpg", 
-    street3: "https://pannellum.org/images/cerro-toco-0.jpg",
-    indoor1: "https://pannellum.org/images/jfk.jpg",
-    indoor2: "https://pannellum.org/images/bma-702.jpg",
-    indoor3: "https://pannellum.org/images/alma.jpg"
+    street1: SHARED_PANORAMA,
+    street2: SHARED_PANORAMA, 
+    street3: SHARED_PANORAMA,
+    indoor1: SHARED_PANORAMA,
+    indoor2: SHARED_PANORAMA,
+    indoor3: SHARED_PANORAMA
 };
 
 export const ALLEY_LIST = [
