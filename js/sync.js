@@ -38,8 +38,6 @@ const FOV_CONE_CONFIG = {
  * Khởi tạo sync module
  */
 export function initSync() {
-    console.log('🔄 Initializing Sync module...');
-    
     // Subscribe to scene changes
     subscribe('currentScene', handleSceneChange);
     
@@ -47,8 +45,6 @@ export function initSync() {
     setTimeout(() => {
         startSyncLoop();
     }, 1000);
-    
-    console.log('✅ Sync module initialized');
 }
 
 // ===========================================
@@ -300,8 +296,6 @@ function syncPanoramaToMap() {
 function handleSceneChange(scene) {
     if (!scene) return;
     
-    console.log('🔄 Sync: Scene changed to', scene.sceneId || scene);
-    
     // Lấy lat/lng: từ scene, hoặc từ currentPOI, hoặc từ POI của alley
     let lat, lng;
     
@@ -317,7 +311,6 @@ function handleSceneChange(scene) {
         if (currentPOI && currentPOI.lat && currentPOI.lng) {
             lat = currentPOI.lat;
             lng = currentPOI.lng;
-            console.log('🔄 Using currentPOI location:', currentPOI.name);
         } else {
             // Fallback 2: Lấy từ POI đầu tiên của alley hiện tại
             const currentAlley = getCurrentAlley();
@@ -326,7 +319,6 @@ function handleSceneChange(scene) {
                 if (alleyPOI) {
                     lat = alleyPOI.lat;
                     lng = alleyPOI.lng;
-                    console.log('🔄 Using alley first POI location:', alleyPOI.name);
                 }
             }
         }
@@ -360,12 +352,10 @@ export function syncMapToPanorama(poiId, sceneId) {
     const viewer = getViewer();
     if (!viewer || !sceneId) return;
     
-    console.log('🔄 Sync: Map → Panorama, loading scene:', sceneId);
-    
     try {
         viewer.loadScene(sceneId);
     } catch (e) {
-        console.error('Failed to load scene:', e);
+        // Silently fail
     }
 }
 

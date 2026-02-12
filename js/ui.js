@@ -63,8 +63,6 @@ export function initUI() {
     
     // Subscribe to state changes
     subscribeToState();
-    
-    console.log('✅ UI initialized (V2)');
 }
 
 // ===========================================
@@ -152,8 +150,6 @@ function createPOICard(poi) {
  * @param {Object} poi - POI object
  */
 function handlePOICardClick(poi) {
-    console.log('POI card clicked (V2):', poi.name, poi.id);
-    
     // Update state
     setState('currentPOI', poi);
     
@@ -171,10 +167,6 @@ function handlePOICardClick(poi) {
     
     if (result) {
         const { alley, scene } = result;
-        console.log('🎬 [UI] Found scene containing POI:');
-        console.log('   - Alley:', alley.alleyId, alley.alleyName);
-        console.log('   - Scene:', scene.sceneId, scene.sceneName);
-        
         setState('currentAlley', alley);
         setState('currentScene', scene.sceneId);
         loadAlley(alley.alleyId, scene.sceneId);
@@ -182,7 +174,6 @@ function handlePOICardClick(poi) {
         // Fallback: load alley với scene đầu tiên nếu không tìm thấy hotspot
         const alley = getAlleyById(poi.alleyId);
         if (alley && alley.scenes.length > 0) {
-            console.log('⚠️ [UI] POI hotspot not found, loading first scene of alley');
             setState('currentAlley', alley);
             setState('currentScene', alley.scenes[0].sceneId);
             loadAlley(poi.alleyId, alley.scenes[0].sceneId);
@@ -515,7 +506,6 @@ function setupPOIDrawer() {
         fab.classList.add('is-active');
         if (overlay) overlay.classList.add('is-visible');
         setState('isDrawerOpen', true);
-        console.log('📋 POI Drawer opened');
     }
     
     /**
@@ -526,7 +516,6 @@ function setupPOIDrawer() {
         fab.classList.remove('is-active');
         if (overlay) overlay.classList.remove('is-visible');
         setState('isDrawerOpen', false);
-        console.log('📋 POI Drawer closed');
     }
     
     // Subscribe to state
@@ -541,8 +530,6 @@ function setupPOIDrawer() {
             if (overlay) overlay.classList.remove('is-visible');
         }
     });
-    
-    console.log('✅ POI Drawer setup complete');
 }
 
 // ===========================================
@@ -584,7 +571,6 @@ function setupFullscreenButtons() {
             // Exit fullscreen
             panel.classList.remove('is-fullscreen');
             splitContainer.classList.remove('has-fullscreen');
-            console.log('🔲 Exit fullscreen mode');
         } else {
             // Enter fullscreen - remove other panel's fullscreen first
             vrPanel.classList.remove('is-fullscreen');
@@ -592,7 +578,6 @@ function setupFullscreenButtons() {
             
             panel.classList.add('is-fullscreen');
             splitContainer.classList.add('has-fullscreen');
-            console.log('🔳 Enter fullscreen mode:', panel.id);
         }
         
         invalidatePanels();
@@ -619,11 +604,8 @@ function setupFullscreenButtons() {
             mapPanel.classList.remove('is-fullscreen');
             splitContainer.classList.remove('has-fullscreen');
             invalidatePanels();
-            console.log('🔲 Exit fullscreen via ESC');
         }
     });
-    
-    console.log('✅ Fullscreen buttons setup complete');
 }
 
 // ===========================================
@@ -664,7 +646,5 @@ function setupThemeToggle() {
         if (window.setMapTileLayer) {
             window.setMapTileLayer(isLight ? 'light' : 'dark');
         }
-        
-        console.log(`🎨 Theme changed to: ${isLight ? 'Light' : 'Dark'}`);
     });
 }

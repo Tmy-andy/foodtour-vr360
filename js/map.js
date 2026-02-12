@@ -72,8 +72,6 @@ export function initMap() {
     
     // Subscribe to state changes
     subscribeToState();
-    
-    console.log('✅ Map initialized');
 }
 
 /**
@@ -159,13 +157,6 @@ function createMarkers() {
  * @param {Object} poi - POI object
  */
 function handleMarkerClick(poi) {
-    console.log('═══════════════════════════════════════════');
-    console.log('🎯 [MAP] POI CLICKED:');
-    console.log('   - POI ID:', poi.id);
-    console.log('   - POI Name:', poi.name);
-    console.log('   - Alley ID (from POI):', poi.alleyId);
-    console.log('═══════════════════════════════════════════');
-    
     // Fly to marker
     map.flyTo([poi.lat, poi.lng], 18, { duration: 0.5 });
     
@@ -190,10 +181,6 @@ function handleMarkerClick(poi) {
     
     if (result) {
         const { alley, scene } = result;
-        console.log('🎬 [MAP] Found scene containing POI:');
-        console.log('   - Alley:', alley.alleyId, alley.alleyName);
-        console.log('   - Scene:', scene.sceneId, scene.sceneName);
-        
         setState('currentAlley', alley);
         setState('currentScene', scene.sceneId);
         loadAlley(alley.alleyId, scene.sceneId);
@@ -201,12 +188,10 @@ function handleMarkerClick(poi) {
         // Fallback: load alley với scene đầu tiên nếu không tìm thấy hotspot
         const alley = getAlleyById(poi.alleyId);
         if (alley && alley.scenes.length > 0) {
-            console.log('⚠️ [MAP] POI hotspot not found, loading first scene of alley');
             setState('currentAlley', alley);
             setState('currentScene', alley.scenes[0].sceneId);
             loadAlley(poi.alleyId, alley.scenes[0].sceneId);
-        } else {
-            console.error('❌ [MAP] Alley NOT FOUND for:', poi.alleyId);
+        }
         }
     }
 }
@@ -334,7 +319,6 @@ export function flyToMarker(lat, lng, zoom = 18) {
  * @param {string} poiId - POI ID
  */
 export function highlightMarker(poiId) {
-    console.log('highlightMarker called with poiId:', poiId);
     const marker = markers.get(poiId);
     if (marker) {
         // Đảm bảo marker được hiển thị (không bị cluster)

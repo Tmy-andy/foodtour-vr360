@@ -38,8 +38,6 @@ const getElements = () => ({
  * Khởi tạo panorama engine - Init ngay khi trang load
  */
 export function initPanorama() {
-    console.log('🎥 Initializing Panorama engine (V2 Split Panel)...');
-    
     // Keyboard events
     document.addEventListener('keydown', handleKeydown);
     
@@ -54,7 +52,6 @@ export function initPanorama() {
         const firstAlley = ALLEY_LIST[0];
         if (firstAlley.scenes && firstAlley.scenes.length > 0) {
             const firstScene = firstAlley.scenes[0];
-            console.log('📍 Auto-loading first scene:', firstScene.sceneId);
             
             // Short delay để DOM ready
             setTimeout(() => {
@@ -62,8 +59,6 @@ export function initPanorama() {
             }, 500);
         }
     }
-    
-    console.log('✅ Panorama engine initialized');
 }
 
 /**
@@ -172,18 +167,9 @@ function handlePOIHotspotClick(poi) {
 // ===========================================
 
 function initPanoramaViewer(alley, sceneId) {
-    console.log('═══════════════════════════════════════════');
-    console.log('🎥 [PANORAMA] LOADING VR:');
-    console.log('   - Alley ID:', alley.alleyId);
-    console.log('   - Alley Name:', alley.alleyName);
-    console.log('   - Scene ID:', sceneId);
-    console.log('   - Total scenes in alley:', alley.scenes.length);
-    console.log('═══════════════════════════════════════════');
-    
     const elements = getElements();
     
     if (!elements.container) {
-        console.error('❌ Panorama container not found');
         return;
     }
     
@@ -209,26 +195,23 @@ function initPanoramaViewer(alley, sceneId) {
         viewer = window.pannellum.viewer(elements.container, config);
         
         viewer.on('load', () => {
-            console.log('✅ [PANORAMA] VR Loaded successfully!');
-            console.log('   - Current scene:', viewer.getScene());
             if (elements.loading) {
                 elements.loading.classList.add('hidden');
             }
         });
         
         viewer.on('scenechange', (newSceneId) => {
-            console.log('🔄 [PANORAMA] Scene changed to:', newSceneId);
             currentSceneData = getSceneById(newSceneId);
             setState('currentScene', currentSceneData);
             updateSceneInfo(newSceneId);
         });
         
         viewer.on('error', (err) => {
-            console.error('❌ [PANORAMA] Pannellum error:', err);
+            console.error('Pannellum error:', err);
         });
         
     } catch (error) {
-        console.error('❌ [PANORAMA] Error creating viewer:', error);
+        console.error('Error creating viewer:', error);
     }
 }
 
@@ -242,7 +225,6 @@ export function loadScene(sceneId) {
 }
 
 export function switchToAlleyScene(alley, sceneId) {
-    console.log('🔄 Switching to alley:', alley.alleyName, 'scene:', sceneId);
     initPanoramaViewer(alley, sceneId);
 }
 
@@ -252,16 +234,12 @@ export function switchToAlleyScene(alley, sceneId) {
  * @param {string} sceneId - ID của scene đầu tiên (optional)
  */
 export function loadAlley(alleyId, sceneId = null) {
-    console.log('📥 [PANORAMA] loadAlley called with:', alleyId);
-    
     const alley = getAlleyById(alleyId);
     if (!alley) {
-        console.error('❌ [PANORAMA] Alley NOT FOUND in ALLEY_LIST:', alleyId);
         return;
     }
     
     const targetSceneId = sceneId || alley.scenes[0]?.sceneId;
-    console.log('📍 [PANORAMA] Found alley:', alley.alleyName, '| Target scene:', targetSceneId);
     
     initPanoramaViewer(alley, targetSceneId);
 }

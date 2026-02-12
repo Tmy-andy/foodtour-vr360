@@ -14,8 +14,6 @@ import { initSync } from './sync.js';
  * Khởi tạo ứng dụng
  */
 function initApp() {
-    console.log('🏮 Hẻm Sài Gòn VR (V2) - Initializing...');
-    
     try {
         // Make setMapTileLayer available globally
         window.setMapTileLayer = setMapTileLayer;
@@ -44,7 +42,6 @@ function initApp() {
         }
         
         console.log('✅ Hẻm Sài Gòn VR — Ready!');
-        console.log('💡 Click marker trên map để xem panorama 360°');
         
     } catch (error) {
         console.error('❌ Error initializing app:', error);

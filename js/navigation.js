@@ -28,8 +28,6 @@ export function initNavigation() {
             // không cần render riêng ở đây
         }
     });
-    
-    console.log('✅ Navigation initialized (V2)');
 }
 
 /**

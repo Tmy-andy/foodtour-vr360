@@ -49,8 +49,6 @@ export function initSplitter() {
     
     // Handle window resize
     window.addEventListener('resize', handleResize);
-    
-    console.log('✅ Splitter initialized');
 }
 
 // ===========================================
@@ -152,14 +150,12 @@ function invalidateSizes() {
         const map = getMap();
         if (map) {
             map.invalidateSize();
-            console.log('📍 Map invalidateSize called');
         }
         
         // Resize Pannellum viewer
         const viewer = getViewer();
         if (viewer) {
             viewer.resize();
-            console.log('🎥 Panorama resize called');
         }
     }, 100);
 }
