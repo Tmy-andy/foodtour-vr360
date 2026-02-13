@@ -14,7 +14,7 @@ const DEMO_IMAGES = {
     seafood: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=300&fit=crop"
 };
 
-const SHARED_PANORAMA = "https://pannellum.org/images/alma.jpg";
+const SHARED_PANORAMA = "assets/panoramas/01.jpg";
 
 export const POI_LIST = [
     { id: "poi-001", name: "Bún Bò Huế Bà Tuyết", alleyName: "Hẻm 47 Phạm Ngũ Lão", category: "food", icon: "bunbo", lat: 10.7685, lng: 106.6935, image: DEMO_IMAGES.bunbo, description: "Quán bún bò truyền thống 30 năm.", openHours: "06:00 – 21:00", rating: 4.5, alleyId: "alley-001", website360Link: "https://example360.com/bunbo-ba-tuyet" },
@@ -71,13 +71,15 @@ export const POI_LIST = [
 
 function createSceneForPOI(poiId, poiName, prevPoiId = null, nextPoiId = null) {
     const links = [];
-    // Nút quay lại: nhìn về phía sau (yaw=180) để quay về quán trước
+    // Mũi tên lùi về (back): bên phải (yaw=90) - đối diện với forward
+    // pitch=-30 để mũi tên nằm trên mặt đường
     if (prevPoiId) {
-        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: 180, pitch: -10, type: "back" });
+        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: 90, pitch: -30, type: "back" });
     }
-    // Nút tiến lên: nhìn về phía trước (yaw=0) để đi tới quán tiếp theo
+    // Mũi tên tiến lên (forward): bên trái (yaw=-90 hoặc 270)
+    // pitch=-30 để mũi tên nằm trên mặt đường
     if (nextPoiId) {
-        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: 0, pitch: -10, type: "forward" });
+        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: -90, pitch: -30, type: "forward" });
     }
     return {
         sceneId: `scene-${poiId}`,
@@ -85,7 +87,8 @@ function createSceneForPOI(poiId, poiName, prevPoiId = null, nextPoiId = null) {
         panorama: SHARED_PANORAMA,
         northOffset: 0,
         links,
-        hotspots: [{ poiId, yaw: 90, pitch: 0 }]
+        // Hotspot của quán: đặt phía trước (yaw=0), ngang tầm mắt (pitch=0)
+        hotspots: [{ poiId, yaw: 0, pitch: 0 }]
     };
 }
 

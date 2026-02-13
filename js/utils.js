@@ -138,17 +138,18 @@ export function scrollIntoViewSmooth(element, container) {
  * @returns {string} SVG string
  */
 export function getArrowSVG(type) {
+    // Tất cả mũi tên đều chỉ lên (forward và back đều rotation = 0)
     const rotations = {
         forward: 0,
         right: 90,
-        back: 180,
+        back: 0,  // Mũi tên quay lại cũng chỉ lên giống forward
         left: 270
     };
     
     const rotation = rotations[type] || 0;
     
     return `
-        <svg viewBox="0 0 64 64" width="50" height="50" style="transform: rotate(${rotation}deg)">
+        <svg viewBox="0 0 64 64" width="80" height="80" style="transform: rotate(${rotation}deg)">
             <defs>
                 <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style="stop-color:#FFBE0B"/>

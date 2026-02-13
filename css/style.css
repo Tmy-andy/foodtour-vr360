@@ -1380,7 +1380,7 @@ body.light-mode .cluster-icon {
    =========================================== */
 .nav-arrow {
     cursor: pointer;
-    transition: all var(--transition-normal);
+    /* Bỏ transition để ghim cố định như hotspot */
 }
 
 .nav-arrow-inner {
@@ -1388,7 +1388,7 @@ body.light-mode .cluster-icon {
     flex-direction: column;
     align-items: center;
     gap: var(--space-xs);
-    animation: arrowPulse 2s infinite;
+    /* Bỏ animation để không bị delay khi kéo */
 }
 
 @keyframes arrowPulse {
@@ -1398,13 +1398,12 @@ body.light-mode .cluster-icon {
 
 .nav-arrow-inner svg {
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
-    transition: all var(--transition-normal);
+    /* Bỏ transition để ghim cố định */
 }
 
 .nav-arrow-inner--hover svg,
 .nav-arrow:hover .nav-arrow-inner svg {
     filter: drop-shadow(0 0 20px rgba(255, 190, 11, 0.9));
-    transform: scale(1.2);
 }
 
 .nav-arrow-label {
@@ -1415,8 +1414,8 @@ body.light-mode .cluster-icon {
     font-size: var(--font-size-xs);
     color: white;
     white-space: nowrap;
-    opacity: 0;
-    transition: opacity var(--transition-normal);
+    opacity: 1;
+    /* Hiện luôn, không chờ hover */
 }
 
 .nav-arrow:hover .nav-arrow-label,

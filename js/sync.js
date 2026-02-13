@@ -254,8 +254,18 @@ function syncPanoramaToMap() {
             setState('currentYaw', currentYaw);
             setState('currentHfov', currentHfov);
             
-            // Sử dụng cached lat/lng
-            if (currentSceneLatLng) {
+            // Lấy vị trí từ sceneMarker để đảm bảo FOV Cone luôn gắn với chấm tròn
+            let lat, lng;
+            if (sceneMarker) {
+                const markerPos = sceneMarker.getLatLng();
+                lat = markerPos.lat;
+                lng = markerPos.lng;
+            } else if (currentSceneLatLng) {
+                lat = currentSceneLatLng.lat;
+                lng = currentSceneLatLng.lng;
+            }
+            
+            if (lat && lng) {
                 // Lấy scene data để lấy northOffset
                 const currentScene = getCurrentScene();
                 const northOffset = currentScene?.northOffset || 0;
@@ -272,8 +282,8 @@ function syncPanoramaToMap() {
                 
                 // Update FOV Cone: góc mở = hfov, bán kính cố định
                 updateFOVCone(
-                    currentSceneLatLng.lat, 
-                    currentSceneLatLng.lng, 
+                    lat, 
+                    lng, 
                     bearing, 
                     currentHfov,
                     radius
@@ -296,31 +306,40 @@ function syncPanoramaToMap() {
 function handleSceneChange(scene) {
     if (!scene) return;
     
-    // Lấy lat/lng: từ scene, hoặc từ currentPOI, hoặc từ POI của alley
+    // Lấy lat/lng từ POI của scene
     let lat, lng;
     
     // Thử lấy từ scene data trước
     const sceneData = typeof scene === 'string' ? getSceneById(scene) : scene;
     
-    if (sceneData && sceneData.lat && sceneData.lng) {
-        lat = sceneData.lat;
-        lng = sceneData.lng;
-    } else {
-        // Fallback 1: Lấy từ currentPOI trong state (POI đang được chọn)
+    if (sceneData) {
+        // Lấy poiId từ hotspots của scene (mỗi scene gắn với 1 POI)
+        if (sceneData.hotspots && sceneData.hotspots.length > 0) {
+            const poiId = sceneData.hotspots[0].poiId;
+            const poi = POI_LIST.find(p => p.id === poiId);
+            if (poi) {
+                lat = poi.lat;
+                lng = poi.lng;
+            }
+        }
+        
+        // Fallback: lấy từ sceneId (format: scene-poi-xxx)
+        if (!lat && sceneData.sceneId) {
+            const poiId = sceneData.sceneId.replace('scene-', '');
+            const poi = POI_LIST.find(p => p.id === poiId);
+            if (poi) {
+                lat = poi.lat;
+                lng = poi.lng;
+            }
+        }
+    }
+    
+    // Fallback cuối: lấy từ currentPOI trong state
+    if (!lat) {
         const currentPOI = getState('currentPOI');
         if (currentPOI && currentPOI.lat && currentPOI.lng) {
             lat = currentPOI.lat;
             lng = currentPOI.lng;
-        } else {
-            // Fallback 2: Lấy từ POI đầu tiên của alley hiện tại
-            const currentAlley = getCurrentAlley();
-            if (currentAlley) {
-                const alleyPOI = POI_LIST.find(poi => poi.alleyId === currentAlley.alleyId);
-                if (alleyPOI) {
-                    lat = alleyPOI.lat;
-                    lng = alleyPOI.lng;
-                }
-            }
         }
     }
     
@@ -338,6 +357,7 @@ function handleSceneChange(scene) {
         }
         
         // Reset last values to force FOV update
+        lastYaw = -999;
         lastYaw = -999;
     }
 }
