@@ -194,7 +194,6 @@ function handleMarkerClick(poi) {
         }
         }
     }
-}
 
 /**
  * Active POI card trong drawer và scroll đến nó (V2: drawer thay cho sidebar)
