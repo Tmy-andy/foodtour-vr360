@@ -95,6 +95,11 @@ function buildPannellumConfig(alley, initialSceneId) {
     const scenes = {};
     
     alley.scenes.forEach(scene => {
+        // Tìm mũi tên forward để đặt hướng nhìn mặc định
+        const forwardLink = scene.links ? scene.links.find(l => l.type === 'forward') : null;
+        // Mặc định nhìn về hướng mũi tên tiến lên (forward) để ảnh liền mạch
+        const defaultYaw = forwardLink ? forwardLink.yaw : 0;
+        
         scenes[scene.sceneId] = {
             type: 'equirectangular',
             panorama: scene.panorama,
@@ -104,6 +109,7 @@ function buildPannellumConfig(alley, initialSceneId) {
             autoRotateInactivityDelay: 5000,
             showControls: false,
             compass: false,
+            yaw: defaultYaw,
             hfov: 100,
             minHfov: 50,
             maxHfov: 120,
@@ -205,6 +211,24 @@ function initPanoramaViewer(alley, sceneId) {
             setState('currentScene', currentSceneData);
             updateSceneInfo(newSceneId);
         });
+        
+        // Khi người dùng tương tác (zoom, kéo), tắt auto-rotate để giữ nguyên trạng thái zoom
+        viewer.on('mousedown', () => {
+            viewer.stopAutoRotate();
+        });
+        
+        viewer.on('touchstart', () => {
+            viewer.stopAutoRotate();
+        });
+        
+        // Khi người dùng zoom bằng scroll, tắt auto-rotate luôn
+        if (elements.container) {
+            elements.container.addEventListener('wheel', () => {
+                if (viewer) {
+                    viewer.stopAutoRotate();
+                }
+            }, { passive: true });
+        }
         
         viewer.on('error', (err) => {
             console.error('Pannellum error:', err);

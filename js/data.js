@@ -14,7 +14,64 @@ const DEMO_IMAGES = {
     seafood: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=300&fit=crop"
 };
 
-const SHARED_PANORAMA = "assets/panoramas/01.jpg";
+
+// Danh sách các ảnh panorama đa dạng
+const PANORAMA_IMAGES = [
+    "assets/panoramas/01.jpg",
+    "assets/panoramas/361 Panorama.jpg",
+    "assets/panoramas/62PANO0001 Panorama.jpg",
+    "assets/panoramas/k7PANO0001 Panorama.jpg",
+    "assets/panoramas/PH1_8057 Panorama.jpg",
+    "assets/panoramas/PT1_6709 Panorama.jpg"
+];
+
+// Bộ đếm để phân bổ panorama luân phiên, không trùng lặp liên tiếp
+let panoramaIndex = 0;
+function getNextPanorama() {
+    const pano = PANORAMA_IMAGES[panoramaIndex % PANORAMA_IMAGES.length];
+    panoramaIndex++;
+    return pano;
+}
+
+// Bản đồ các offset cho từng panorama (điều chỉnh lệch hướng của ảnh)
+// northOffset: xoay toàn bộ panorama (hotspot + mũi tên) để căn chỉnh
+// hotspotYawOffset / hotspotPitchOffset: điều chỉnh riêng hotspot quán
+// arrowBackYawOffset: điều chỉnh riêng mũi tên quay lại
+// swapArrows: đổi vị trí mũi tên forward/back
+const PANORAMA_ADJUSTMENTS = {
+    "assets/panoramas/361 Panorama.jpg": {
+        northOffset: 0,
+        hotspotYawOffset: 33,     // dịch hotspot sang phải mạnh (về phía nhà hàng)
+        hotspotPitchOffset: -10,  // hạ xuống một chút
+        swapArrows: false,
+        arrowBackYawOffset: 60   // nhích mũi tên quay lại sang trái cho khớp đường đi
+    },
+    "assets/panoramas/62PANO0001 Panorama.jpg": {
+        northOffset: 0,
+        hotspotYawOffset: 80,     // dịch hotspot sang phải thêm nữa
+        hotspotPitchOffset: -15,  // hạ xuống
+        swapArrows: false,
+        arrowBackYawOffset: 40    // nhích mũi tên quay lại sang trái (giảm từ 60 → 40)
+    },
+    "assets/panoramas/k7PANO0001 Panorama.jpg": {
+        northOffset: 0,           // không xoay panorama
+        hotspotYawOffset: 180,    // hotspot bị ngược → xoay 180° riêng hotspot
+        hotspotPitchOffset: 0,
+        swapArrows: true,         // đổi vị trí mũi tên forward/back
+        arrowBackYawOffset: 0
+    },
+    // Các ảnh khác dùng mặc định
+};
+
+function getAdjustmentsForPanorama(panoramaPath) {
+    return PANORAMA_ADJUSTMENTS[panoramaPath] || {
+        northOffset: 0,
+        hotspotYawOffset: 0,
+        hotspotPitchOffset: 0,
+        swapArrows: false,
+        arrowBackYawOffset: 0
+    };
+}
 
 const WEBSITE_360_LINK = "https://web-88foodgarden.vt360.vn/?media-index=2&trigger-overlay-name=88foodgarden_2";
 
@@ -72,25 +129,32 @@ export const POI_LIST = [
 ];
 
 function createSceneForPOI(poiId, poiName, prevPoiId = null, nextPoiId = null) {
+    const panoramaPath = getNextPanorama();
+    const adj = getAdjustmentsForPanorama(panoramaPath);
+    
     const links = [];
-    // Mũi tên lùi về (back): bên phải (yaw=90) - đối diện với forward
-    // pitch=-30 để mũi tên nằm trên mặt đường
+    
+    // Nếu swapArrows = true (ảnh xoay 180°), đổi yaw forward/back cho nhau
+    const forwardYaw = adj.swapArrows ? 90 : -90;
+    const backYaw = adj.swapArrows ? -90 : 90;
+    
+    // Mũi tên lùi về (back)
     if (prevPoiId) {
-        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: 90, pitch: -30, type: "back" });
+        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: backYaw + adj.arrowBackYawOffset, pitch: -30, type: "back" });
     }
-    // Mũi tên tiến lên (forward): bên trái (yaw=-90 hoặc 270)
-    // pitch=-30 để mũi tên nằm trên mặt đường
+    // Mũi tên tiến lên (forward)
     if (nextPoiId) {
-        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: -90, pitch: -30, type: "forward" });
+        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: forwardYaw, pitch: -30, type: "forward" });
     }
+    
     return {
         sceneId: `scene-${poiId}`,
         sceneName: poiName,
-        panorama: SHARED_PANORAMA,
-        northOffset: 0,
+        panorama: panoramaPath,
+        northOffset: adj.northOffset,
         links,
-        // Hotspot của quán: đặt phía trước (yaw=0), ngang tầm mắt (pitch=0)
-        hotspots: [{ poiId, yaw: 0, pitch: 0 }]
+        // Hotspot của quán: áp dụng offset điều chỉnh riêng cho từng ảnh panorama
+        hotspots: [{ poiId, yaw: 0 + adj.hotspotYawOffset, pitch: 0 + adj.hotspotPitchOffset }]
     };
 }
 
