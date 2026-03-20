@@ -606,6 +606,8 @@ body.is-dragging .divider {
 /* FAB when drawer is open */
 .fab-button.is-active {
     background: var(--color-dark);
+    opacity: 0;
+    pointer-events: none;
 }
 
 .fab-button.is-active .fab-button__icon {
