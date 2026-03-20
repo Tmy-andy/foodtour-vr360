@@ -13,9 +13,9 @@ PANORAMA_DIR = os.path.join(os.path.dirname(__file__), "assets", "panoramas")
 BACKUP_DIR = os.path.join(PANORAMA_DIR, "_backup")
 PREVIEW_DIR = os.path.join(PANORAMA_DIR, "preview")
 TARGET_WIDTH = 4096
-PREVIEW_WIDTH = 1024
+PREVIEW_WIDTH = 2048
 JPEG_QUALITY = 75
-PREVIEW_QUALITY = 60
+PREVIEW_QUALITY = 70
 
 def compress_panoramas():
     os.makedirs(BACKUP_DIR, exist_ok=True)

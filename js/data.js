@@ -22,6 +22,14 @@ const PANORAMA_IMAGES = [
     "assets/panoramas/62PANO0001 Panorama.jpg",
     "assets/panoramas/k7PANO0001 Panorama.jpg",
     "assets/panoramas/PH1_8057 Panorama.jpg",
+    "assets/panoramas/PH1_8454 Panorama.jpg",
+    "assets/panoramas/PH1_8790 Panorama.jpg",
+    "assets/panoramas/PH1_8905 Panorama.jpg",
+    "assets/panoramas/PH1_8980 Panorama.jpg",
+    "assets/panoramas/PH1_9025 Panorama.jpg",
+    "assets/panoramas/PH1_9194 Panorama.jpg",
+    "assets/panoramas/PH1_9312 Panorama.jpg",
+    "assets/panoramas/PH1_9488 Panorama.jpg",
     "assets/panoramas/PT1_6709 Panorama.jpg"
 ];
 
@@ -60,6 +68,35 @@ const PANORAMA_ADJUSTMENTS = {
         swapArrows: true,         // đổi vị trí mũi tên forward/back
         arrowBackYawOffset: 0
     },
+    "assets/panoramas/PH1_8790 Panorama.jpg": {
+        northOffset: 0,
+        hotspotYawOffset: -90,    // hotspot quán ở bên trái (phía Aloha Hotel)
+        hotspotPitchOffset: -5,   // hạ xuống chút
+        swapArrows: false,
+        arrowBackYawOffset: 90,   // mũi tên quay lại: 90 + 90 = 180 (phía sau, vuông góc hotspot)
+        arrowForwardYawOffset: 90 // mũi tên đi tiếp: -90 + 90 = 0 (phía trước, vuông góc hotspot)
+    },
+    "assets/panoramas/PH1_8905 Panorama.jpg": {
+        northOffset: 0,
+        hotspotYawOffset: -30,    // dịch hotspot sang trái
+        hotspotPitchOffset: -5,   // hạ xuống chút
+        swapArrows: false,
+        arrowBackYawOffset: -40,   // nhích mũi tên quay lại cho khớp đường đi
+        arrowForwardYawOffset: -20, // nhích mũi tên đi tiếp cho khớp đường đi
+        arrowPitchOffset: 15      // dịch mũi tên lên: -30 + 15 = -15
+    },
+    "assets/panoramas/PH1_8980 Panorama.jpg": {
+        northOffset: 0,
+        hotspotYawOffset: -60,    // hotspot chính (phía Vũng Tàu Memory Hotel)
+        hotspotPitchOffset: -10,
+        swapArrows: false,        // forward=-90, back=90
+        arrowForwardYawOffset: 90, // mũi tên đi tiếp: -90 + 90 = 0 (thẳng trước mặt, đường đi)
+        arrowBackYawOffset: 90,   // mũi tên quay lại: 90 + 90 = 180 (phía sau, đường đi)
+        arrowPitchOffset: 10,     // dịch mũi tên lên chút: -30 + 10 = -20
+        // Hotspot phụ ở phía Cassie Boutique Hotel
+        extraHotspotYaw: 110,
+        extraHotspotPitch: -10
+    },
     // Các ảnh khác dùng mặc định
 };
 
@@ -69,7 +106,8 @@ function getAdjustmentsForPanorama(panoramaPath) {
         hotspotYawOffset: 0,
         hotspotPitchOffset: 0,
         swapArrows: false,
-        arrowBackYawOffset: 0
+        arrowBackYawOffset: 0,
+        arrowForwardYawOffset: 0
     };
 }
 
@@ -137,14 +175,15 @@ function createSceneForPOI(poiId, poiName, prevPoiId = null, nextPoiId = null) {
     // Nếu swapArrows = true (ảnh xoay 180°), đổi yaw forward/back cho nhau
     const forwardYaw = adj.swapArrows ? 90 : -90;
     const backYaw = adj.swapArrows ? -90 : 90;
+    const arrowPitch = -30 + (adj.arrowPitchOffset || 0);
     
     // Mũi tên lùi về (back)
     if (prevPoiId) {
-        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: backYaw + adj.arrowBackYawOffset, pitch: -30, type: "back" });
+        links.push({ targetSceneId: `scene-${prevPoiId}`, yaw: backYaw + adj.arrowBackYawOffset, pitch: arrowPitch, type: "back" });
     }
     // Mũi tên tiến lên (forward)
     if (nextPoiId) {
-        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: forwardYaw, pitch: -30, type: "forward" });
+        links.push({ targetSceneId: `scene-${nextPoiId}`, yaw: forwardYaw + (adj.arrowForwardYawOffset || 0), pitch: arrowPitch, type: "forward" });
     }
     
     return {
@@ -154,8 +193,28 @@ function createSceneForPOI(poiId, poiName, prevPoiId = null, nextPoiId = null) {
         northOffset: adj.northOffset,
         links,
         // Hotspot của quán: áp dụng offset điều chỉnh riêng cho từng ảnh panorama
-        hotspots: [{ poiId, yaw: 0 + adj.hotspotYawOffset, pitch: 0 + adj.hotspotPitchOffset }]
+        hotspots: buildPOIHotspots(poiId, adj)
     };
+}
+
+/**
+ * Tạo danh sách hotspot cho scene, hỗ trợ hotspot phụ (extraHotspot)
+ */
+function buildPOIHotspots(poiId, adj) {
+    const hotspots = [
+        { poiId, yaw: 0 + adj.hotspotYawOffset, pitch: 0 + adj.hotspotPitchOffset }
+    ];
+    
+    // Nếu có hotspot phụ (cùng quán, vị trí khác trong ảnh panorama)
+    if (adj.extraHotspotYaw !== undefined) {
+        hotspots.push({
+            poiId,
+            yaw: adj.extraHotspotYaw,
+            pitch: adj.extraHotspotPitch || 0
+        });
+    }
+    
+    return hotspots;
 }
 
 export const ALLEY_LIST = [

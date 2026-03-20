@@ -17,6 +17,7 @@ import { openModal } from './ui.js';
 let viewer = null;
 let currentAlleyConfig = null;
 let currentSceneData = null;
+let upgradedScenes = new Set(); // Track scenes đã upgrade lên full-res
 
 // ===========================================
 // DOM ELEMENTS
@@ -144,17 +145,35 @@ function buildPannellumConfig(alley, initialSceneId) {
 
 /**
  * Preload ảnh full-res rồi swap vào viewer thay thế preview
+ * Khi ảnh full tải xong, reload scene để hiển thị ảnh rõ nét
  */
 function upgradeToFullRes(sceneId, fullPanoramaPath) {
+    // Nếu scene này đã được upgrade rồi thì bỏ qua (tránh loop)
+    if (upgradedScenes.has(sceneId)) return;
+    
     const img = new Image();
     img.onload = () => {
-        if (viewer && viewer.getScene() === sceneId) {
-            // Pannellum không hỗ trợ swap ảnh trực tiếp,
-            // nhưng ta preload sẵn để lần load sau (hoặc revisit) dùng cache
-            // Cập nhật config để lần tới load scene này sẽ dùng bản full
+        if (viewer && viewer.getScene() === sceneId && !upgradedScenes.has(sceneId)) {
             try {
-                viewer.getConfig().scenes[sceneId].panorama = fullPanoramaPath;
-            } catch (e) { /* ignore */ }
+                // Đánh dấu đã upgrade trước khi reload (tránh loop)
+                upgradedScenes.add(sceneId);
+                
+                // Cập nhật config panorama sang bản full-res
+                const sceneConfig = viewer.getConfig().scenes[sceneId];
+                if (sceneConfig) {
+                    sceneConfig.panorama = fullPanoramaPath;
+                    
+                    // Lưu lại vị trí nhìn hiện tại
+                    const currentYaw = viewer.getYaw();
+                    const currentPitch = viewer.getPitch();
+                    const currentHfov = viewer.getHfov();
+                    
+                    // Reload scene để Pannellum render ảnh full-res
+                    viewer.loadScene(sceneId, currentPitch, currentYaw, currentHfov);
+                }
+            } catch (e) {
+                console.warn('upgradeToFullRes error:', e);
+            }
         }
     };
     img.src = fullPanoramaPath;
@@ -248,6 +267,9 @@ function initPanoramaViewer(alley, sceneId) {
         viewer.destroy();
         viewer = null;
     }
+    
+    // Reset danh sách scene đã upgrade khi chuyển alley
+    upgradedScenes.clear();
     
     try {
         viewer = window.pannellum.viewer(elements.container, config);
