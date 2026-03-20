@@ -91,6 +91,16 @@ function handleKeydown(event) {
 // PANORAMA CONFIGURATION
 // ===========================================
 
+/**
+ * Tạo đường dẫn preview từ đường dẫn panorama gốc
+ * Preview nằm trong subfolder "preview/" cùng thư mục
+ */
+function getPreviewPath(panoramaPath) {
+    const parts = panoramaPath.split('/');
+    const filename = parts.pop();
+    return parts.join('/') + '/preview/' + filename;
+}
+
 function buildPannellumConfig(alley, initialSceneId) {
     const scenes = {};
     
@@ -100,9 +110,12 @@ function buildPannellumConfig(alley, initialSceneId) {
         // Mặc định nhìn về hướng mũi tên tiến lên (forward) để ảnh liền mạch
         const defaultYaw = forwardLink ? forwardLink.yaw : 0;
         
+        // Dùng preview nhỏ (~70KB) để load siêu nhanh ban đầu
+        const previewPath = getPreviewPath(scene.panorama);
+        
         scenes[scene.sceneId] = {
             type: 'equirectangular',
-            panorama: scene.panorama,
+            panorama: previewPath,
             northOffset: scene.northOffset || 0,
             autoLoad: true,
             autoRotate: -2,
@@ -113,7 +126,9 @@ function buildPannellumConfig(alley, initialSceneId) {
             hfov: 100,
             minHfov: 50,
             maxHfov: 120,
-            hotSpots: buildHotspots(scene)
+            hotSpots: buildHotspots(scene),
+            // Lưu đường dẫn bản full để swap sau
+            _fullPanorama: scene.panorama
         };
     });
     
@@ -125,6 +140,43 @@ function buildPannellumConfig(alley, initialSceneId) {
         },
         scenes: scenes
     };
+}
+
+/**
+ * Preload ảnh full-res rồi swap vào viewer thay thế preview
+ */
+function upgradeToFullRes(sceneId, fullPanoramaPath) {
+    const img = new Image();
+    img.onload = () => {
+        if (viewer && viewer.getScene() === sceneId) {
+            // Pannellum không hỗ trợ swap ảnh trực tiếp,
+            // nhưng ta preload sẵn để lần load sau (hoặc revisit) dùng cache
+            // Cập nhật config để lần tới load scene này sẽ dùng bản full
+            try {
+                viewer.getConfig().scenes[sceneId].panorama = fullPanoramaPath;
+            } catch (e) { /* ignore */ }
+        }
+    };
+    img.src = fullPanoramaPath;
+}
+
+/**
+ * Preload các scene kế tiếp để chuyển cảnh mượt hơn
+ */
+function preloadAdjacentScenes(sceneId) {
+    const scene = getSceneById(sceneId);
+    if (!scene || !scene.links) return;
+    
+    scene.links.forEach(link => {
+        const targetScene = getSceneById(link.targetSceneId);
+        if (targetScene) {
+            // Preload cả preview và full của scene kế
+            const previewImg = new Image();
+            previewImg.src = getPreviewPath(targetScene.panorama);
+            const fullImg = new Image();
+            fullImg.src = targetScene.panorama;
+        }
+    });
 }
 
 function buildHotspots(scene) {
@@ -204,12 +256,29 @@ function initPanoramaViewer(alley, sceneId) {
             if (elements.loading) {
                 elements.loading.classList.add('hidden');
             }
+            
+            // Sau khi preview load xong, upgrade lên bản full-res
+            const currentId = viewer.getScene();
+            const sceneConfig = config.scenes[currentId];
+            if (sceneConfig && sceneConfig._fullPanorama) {
+                upgradeToFullRes(currentId, sceneConfig._fullPanorama);
+            }
+            
+            // Preload ảnh các scene kế tiếp
+            preloadAdjacentScenes(currentId);
         });
         
         viewer.on('scenechange', (newSceneId) => {
             currentSceneData = getSceneById(newSceneId);
             setState('currentScene', currentSceneData);
             updateSceneInfo(newSceneId);
+            
+            // Upgrade và preload cho scene mới
+            const sceneConfig = config.scenes[newSceneId];
+            if (sceneConfig && sceneConfig._fullPanorama) {
+                upgradeToFullRes(newSceneId, sceneConfig._fullPanorama);
+            }
+            preloadAdjacentScenes(newSceneId);
         });
         
         // Khi người dùng tương tác (zoom, kéo), tắt auto-rotate để giữ nguyên trạng thái zoom
